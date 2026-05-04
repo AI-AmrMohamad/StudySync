@@ -1,0 +1,474 @@
+@model StudySync.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Freelancer Profile";
+}
+
+<style>
+    /* Premium Profile Aesthetics */
+    .profile-header {
+        background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(0, 210, 211, 0.05) 100%);
+        border-radius: 1.25rem;
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    .profile-avatar-lg {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--ss-primary), var(--ss-teal));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        font-weight: 800;
+        box-shadow: 0 10px 25px rgba(108, 92, 231, 0.3);
+        border: 4px solid white;
+    }
+    .nav-pills-custom .nav-link {
+        border-radius: 20px;
+        font-weight: 600;
+        color: var(--bs-gray-600);
+        padding: 10px 25px;
+        transition: all 0.3s ease;
+    }
+    .nav-pills-custom .nav-link.active {
+        background-color: var(--ss-primary);
+        color: white;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+    .skill-badge {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        margin: 4px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    .masonry-card {
+        border-radius: 1.25rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .masonry-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+    }
+    .toast-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1055;
+    }
+</style>
+
+<div class="container mt-4 mb-5 pb-5">
+    
+    <!-- TOP TOGGLE TAB BAR -->
+    <div class="d-flex justify-content-center mb-5">
+        <ul class="nav nav-pills nav-pills-custom shadow-sm bg-white rounded-pill p-2" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="public-tab" data-bs-toggle="pill" data-bs-target="#public-view" type="button" role="tab">
+                    <i class="bi bi-person-badge me-2"></i>View Public Profile
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="pill" data-bs-target="#settings-view" type="button" role="tab">
+                    <i class="bi bi-gear-fill me-2"></i>Edit Settings
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- TAB CONTENTS -->
+    <div class="tab-content" id="profileTabsContent">
+        
+        <!-- VIEW A: Public Portfolio -->
+        <div class="tab-pane fade show active" id="public-view" role="tabpanel" tabindex="0">
+            <!-- Header Card -->
+            <div class="card border-0 profile-header hover-lift mb-4 shadow-sm">
+                <div class="row align-items-center">
+                    <div class="col-md-auto text-center mb-3 mb-md-0">
+                        <div class="profile-avatar-lg mx-auto">
+                            @Model.CurrentUser.FullName.Substring(0,1).ToUpper()
+                        </div>
+                    </div>
+                    <div class="col-md">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h1 class="fw-bold mb-1" id="display-name">@Model.CurrentUser.FullName</h1>
+                                <p class="lead text-muted fw-semibold mb-2" id="display-headline">
+                                    @(string.IsNullOrEmpty(Model.CurrentUser.ProfileHeadline) ? "Student" : Model.CurrentUser.ProfileHeadline)
+                                </p>
+                                <div class="d-flex align-items-center text-warning fs-5">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-half"></i>
+                                    <span class="text-muted ms-2 fs-6 fw-bold">(@Model.CurrentUser.Rating Rating)</span>
+                                </div>
+                            </div>
+                            <div class="text-end d-none d-md-block">
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fs-6">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Available for Hire
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About & Skills -->
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card masonry-card h-100 p-4">
+                        <h4 class="fw-bold mb-3"><i class="bi bi-file-earmark-person me-2 text-primary"></i>About Me</h4>
+                        <p class="text-muted" style="line-height: 1.8;" id="display-bio">
+                            @(string.IsNullOrEmpty(Model.CurrentUser.Bio) ? "This user hasn't written a biography yet." : Model.CurrentUser.Bio)
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card masonry-card p-4">
+                        <h4 class="fw-bold mb-3"><i class="bi bi-lightning-charge me-2 text-warning"></i>Expertise (Can Teach)</h4>
+                        <div class="mb-4">
+                            @if(!Model.TeachingSkills.Any()) { <span class="text-muted">None listed.</span> }
+                            @foreach(var s in Model.TeachingSkills) {
+                                <span class="badge bg-primary bg-opacity-10 text-primary skill-badge">@s.Name</span>
+                            }
+                        </div>
+                        
+                        <h4 class="fw-bold mb-3"><i class="bi bi-book me-2 text-info"></i>Currently Learning</h4>
+                        <div>
+                            @if(!Model.LearningSkills.Any()) { <span class="text-muted">None listed.</span> }
+                            @foreach(var s in Model.LearningSkills) {
+                                <span class="badge bg-info bg-opacity-10 text-info skill-badge">@s.Name</span>
+                            }
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(Model.CurrentUser.PhoneNumber) || !string.IsNullOrEmpty(Model.CurrentUser.WhatsAppNumber) || !string.IsNullOrEmpty(Model.CurrentUser.LinkedInProfile))
+                        {
+                            <div class="card masonry-card p-4 mt-4">
+                                <h4 class="fw-bold mb-3"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Contact Info</h4>
+                                <div class="d-flex gap-3">
+                                    @if (!string.IsNullOrEmpty(Model.CurrentUser.PhoneNumber)) {
+                                        <a href="tel:@Model.CurrentUser.PhoneNumber" class="btn btn-light rounded-circle border shadow-sm" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;" title="Call">
+                                            <i class="bi bi-telephone-fill text-dark fs-5"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.CurrentUser.WhatsAppNumber)) {
+                                        <a href="https://wa.me/@Model.CurrentUser.WhatsAppNumber" target="_blank" class="btn rounded-circle shadow-sm" style="background:#25D366; color:white; width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;" title="WhatsApp">
+                                            <i class="bi bi-whatsapp fs-5"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.CurrentUser.LinkedInProfile)) {
+                                        <a href="@Model.CurrentUser.LinkedInProfile" target="_blank" class="btn rounded-circle shadow-sm" style="background:#0077b5; color:white; width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;" title="LinkedIn">
+                                            <i class="bi bi-linkedin fs-5"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            <!-- Work History -->
+            <h3 class="fw-bold mt-5 mb-4"><i class="bi bi-briefcase-fill me-2 text-success"></i>Work History</h3>
+            <div class="row g-4">
+                @if (!Model.CompletedBounties.Any())
+                {
+                    <div class="col-12">
+                        <div class="p-5 text-center bg-light rounded-4 text-muted">
+                            <i class="bi bi-search display-3 mb-3 d-block opacity-25"></i>
+                            <h4>No completed jobs yet.</h4>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @foreach(var bounty in Model.CompletedBounties)
+                    {
+                        <div class="col-md-6">
+                            <div class="card masonry-card p-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h5 class="fw-bold text-dark">@bounty.Title</h5>
+                                    <span class="text-success fw-bold">+@bounty.CreditReward Credits</span>
+                                </div>
+                                <p class="text-muted small mb-3">@bounty.Description</p>
+                                <div class="d-flex text-warning small">
+                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                    <span class="text-muted ms-2">"Great work!"</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- VIEW B: Private Settings Editor -->
+        <div class="tab-pane fade" id="settings-view" role="tabpanel" tabindex="0">
+            <div class="row g-4">
+                <!-- General Info Edit -->
+                <div class="col-lg-8">
+                    <div class="card masonry-card p-4 mb-4">
+                        <h4 class="fw-bold mb-4">General Information</h4>
+                        <form id="profileSettingsForm">
+                            @Html.AntiForgeryToken()
+                            <div class="form-floating mb-3">
+                                <input asp-for="SettingsForm.FullName" class="form-control" id="form-fullname" />
+                                <label asp-for="SettingsForm.FullName"></label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input asp-for="SettingsForm.ProfileHeadline" class="form-control" id="form-headline" placeholder="e.g. Expert in Math" />
+                                <label asp-for="SettingsForm.ProfileHeadline"></label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <textarea asp-for="SettingsForm.Bio" class="form-control" id="form-bio" style="height: 150px" placeholder="Write about yourself..."></textarea>
+                                <label asp-for="SettingsForm.Bio"></label>
+                            </div>
+                            <h5 class="fw-bold mt-4 mb-3"><i class="bi bi-person-vcard text-primary me-2"></i>Contact Links</h5>
+                            <div class="form-floating mb-3">
+                                <input asp-for="SettingsForm.PhoneNumber" class="form-control" placeholder="e.g. +1234567890" />
+                                <label asp-for="SettingsForm.PhoneNumber">Phone Number (Optional)</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input asp-for="SettingsForm.WhatsAppNumber" class="form-control" placeholder="e.g. 1234567890" />
+                                <label asp-for="SettingsForm.WhatsAppNumber">WhatsApp Number (Optional)</label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <input asp-for="SettingsForm.LinkedInProfile" class="form-control" placeholder="https://linkedin.com/in/..." />
+                                <label asp-for="SettingsForm.LinkedInProfile">LinkedIn Profile URL (Optional)</label>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold" onclick="saveProfileSettings()">
+                                <i class="bi bi-cloud-check-fill me-2"></i>Save Changes
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Security -->
+                    <div class="card masonry-card p-4">
+                        <h4 class="fw-bold mb-4 text-danger"><i class="bi bi-shield-lock-fill me-2"></i>Security Settings</h4>
+                        <form id="passwordForm">
+                            @Html.AntiForgeryToken()
+                            <div class="form-floating mb-3">
+                                <input asp-for="PasswordForm.OldPassword" class="form-control" type="password" />
+                                <label asp-for="PasswordForm.OldPassword"></label>
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6 form-floating">
+                                    <input asp-for="PasswordForm.NewPassword" class="form-control" type="password" />
+                                    <label class="ms-2" asp-for="PasswordForm.NewPassword"></label>
+                                </div>
+                                <div class="col-md-6 form-floating">
+                                    <input asp-for="PasswordForm.ConfirmPassword" class="form-control" type="password" />
+                                    <label class="ms-2" asp-for="PasswordForm.ConfirmPassword"></label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger shadow-sm rounded-pill px-4 fw-bold" onclick="changePassword()">Update Password</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Skill Editor -->
+                <div class="col-lg-4">
+                    <div class="card masonry-card p-4 bg-light bg-opacity-50 h-100">
+                        <h4 class="fw-bold mb-3">Manage Skills</h4>
+                        <p class="text-muted small">Search the global catalog to add skills to your profile.</p>
+                        
+                        <div class="input-group mb-4">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="skillSearch" placeholder="Find a skill..." onkeyup="filterSkills()" />
+                        </div>
+
+                        <div class="mt-2 mb-4 p-3 border rounded-3 bg-white shadow-sm">
+                            <h6 class="fw-bold mb-2"><i class="bi bi-plus-circle-dotted me-2 text-primary"></i>Can't find a skill? Add it!</h6>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="customSkillName" class="form-control" placeholder="Skill Name (e.g. Next.js)..." />
+                                <select id="customSkillType" class="form-select" style="max-width: 90px;">
+                                    <option value="true">Teach</option>
+                                    <option value="false">Learn</option>
+                                </select>
+                                <button class="btn btn-primary" type="button" onclick="createCustomSkill()">Add Custom</button>
+                            </div>
+                        </div>
+
+                        <div class="list-group list-group-flush bg-transparent overflow-auto" id="skillDirectory" style="max-height: 400px;">
+                            @foreach(var skill in Model.AllAvailableSkills)
+                            {
+                                bool isTeaching = Model.TeachingSkills.Any(s => s.Id == skill.Id);
+                                bool isLearning = Model.LearningSkills.Any(s => s.Id == skill.Id);
+
+                                <div class="list-group-item bg-transparent border-bottom py-3 px-0 skill-row">
+                                    <div class="fw-bold mb-2 skill-name">@skill.Name</div>
+                                    <div class="btn-group w-100 shadow-sm" role="group">
+                                        <button type="button" class="btn btn-sm @(isTeaching ? "btn-primary" : "btn-outline-primary")" onclick="toggleSkill(@skill.Id, true, this)">Teach</button>
+                                        <button type="button" class="btn btn-sm @(isLearning ? "btn-info text-white" : "btn-outline-info")" onclick="toggleSkill(@skill.Id, false, this)">Learn</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSkill(@skill.Id, this)"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap Toast for Notifications -->
+<div class="toast-container">
+    <div id="actionToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-bold" id="toastMessage">
+                Successfully updated!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showToast(msg, isError = false) {
+            const toastEl = document.getElementById('actionToast');
+            document.getElementById('toastMessage').innerText = msg;
+            toastEl.classList.remove('bg-success', 'bg-danger');
+            toastEl.classList.add(isError ? 'bg-danger' : 'bg-success');
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+        // 1. Save Profile Details via AJAX
+        function saveProfileSettings() {
+            const form = document.getElementById('profileSettingsForm');
+            const formData = new FormData(form);
+
+            fetch('/Profile/UpdateSettings', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast(data.message);
+                    // Dynamically update View A immediately
+                    document.getElementById('display-name').innerText = data.name;
+                    document.getElementById('display-headline').innerText = data.headline;
+                    document.getElementById('display-bio').innerText = data.bio;
+                } else {
+                    showToast(data.message, true);
+                }
+            })
+            .catch(err => {
+                showToast("Server error. Try again.", true);
+            });
+        }
+
+        // 2. Change Password
+        function changePassword() {
+            const form = document.getElementById('passwordForm');
+            const formData = new FormData(form);
+
+            fetch('/Profile/ChangePassword', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast(data.message);
+                    form.reset();
+                } else {
+                    showToast(data.message, true);
+                }
+            })
+            .catch(err => {
+                showToast("Server error. Try again.", true);
+            });
+        }
+
+        // 3. Filter Skill List UI
+        function filterSkills() {
+            const val = document.getElementById('skillSearch').value.toLowerCase();
+            document.querySelectorAll('.skill-row').forEach(row => {
+                const name = row.querySelector('.skill-name').innerText.toLowerCase();
+                row.style.display = name.includes(val) ? 'block' : 'none';
+            });
+        }
+
+        // 4. Toggle/Remove Skills via AJAX
+        function toggleSkill(id, isTeaching, btnRef) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const formData = new FormData();
+            formData.append('skillId', id);
+            formData.append('isTeaching', isTeaching);
+            formData.append('__RequestVerificationToken', token);
+
+            fetch('/Profile/AddSkill', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast(`Skill added to ${isTeaching?'Teaching':'Learning'} list`);
+                    // Update button colors visually
+                    const group = btnRef.closest('.btn-group');
+                    group.querySelector('button:nth-child(1)').className = isTeaching ? "btn btn-sm btn-primary" : "btn btn-sm btn-outline-primary";
+                    group.querySelector('button:nth-child(2)').className = !isTeaching ? "btn btn-sm btn-info text-white" : "btn btn-sm btn-outline-info";
+                }
+            });
+        }
+
+        function removeSkill(id, btnRef) {
+             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+             const formData = new FormData();
+             formData.append('skillId', id);
+             formData.append('__RequestVerificationToken', token);
+
+             fetch('/Profile/RemoveSkill', { method: 'POST', body: formData })
+             .then(res => res.json())
+             .then(data => {
+                 if(data.success) {
+                     showToast("Skill removed.");
+                     const group = btnRef.closest('.btn-group');
+                     group.querySelector('button:nth-child(1)').className = "btn btn-sm btn-outline-primary";
+                     group.querySelector('button:nth-child(2)').className = "btn btn-sm btn-outline-info";
+                 }
+             });
+        }
+
+        function createCustomSkill() {
+            const name = document.getElementById('customSkillName').value;
+            const isTeach = document.getElementById('customSkillType').value;
+            if(!name) {
+                showToast("Please enter a skill name.", true);
+                return;
+            }
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('category', 'Custom Request');
+            formData.append('isTeaching', isTeach);
+            formData.append('__RequestVerificationToken', token);
+
+            fetch('/Profile/CreateGlobalSkill', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast("Custom skill successfully added to your profile!");
+                    document.getElementById('customSkillName').value = '';
+                    setTimeout(() => window.location.reload(), 1500); // Reload to populate the lists and UI
+                } else {
+                    showToast(data.message, true);
+                }
+            })
+            .catch(err => {
+                showToast("Server error. Try again.", true);
+            });
+        }
+    </script>
+}

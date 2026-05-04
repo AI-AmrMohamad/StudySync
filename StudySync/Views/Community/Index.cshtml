@@ -1,0 +1,756 @@
+@model StudySync.Models.ViewModels.CommunityViewModel
+@{
+    ViewData["Title"] = "Community Hub";
+    Layout = "_Layout";
+}
+
+<style>
+    /* ============================
+       Community Hub — Elegant Joy
+       Aligned with site.css v3.0
+       ============================ */
+
+    /* Override container to be edge-to-edge below navbar */
+    body > div.container { padding: 0 !important; max-width: 100% !important; margin-top: 0 !important; }
+    footer { display: none !important; }
+
+    .chat-app {
+        display: flex;
+        height: calc(100vh - 64px); /* subtract navbar height */
+        overflow: hidden;
+        background: var(--ss-bg);
+    }
+
+    /* ---- Pane 1: Tier Switcher ---- */
+    .pane-tiers {
+        width: 72px;
+        background: rgba(28, 16, 64, 0.97);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 0;
+        gap: 10px;
+        border-right: 1px solid rgba(167, 139, 250, 0.1);
+        flex-shrink: 0;
+    }
+
+    .tier-btn {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.07);
+        color: rgba(255,255,255,0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: none;
+        outline: none;
+        position: relative;
+    }
+
+    .tier-btn:hover {
+        border-radius: 16px;
+        background: rgba(167, 139, 250, 0.2);
+        color: #A78BFA;
+        transform: scale(1.08);
+    }
+
+    .tier-btn.active {
+        border-radius: 16px;
+        background: linear-gradient(135deg, #7C3AED, #A78BFA);
+        color: white;
+        box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
+    }
+
+    .tier-btn .tier-tooltip {
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(28, 16, 64, 0.95);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 6px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 100;
+        border: 1px solid rgba(167,139,250,0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .tier-btn:hover .tier-tooltip { opacity: 1; }
+
+    .tier-divider {
+        width: 30px;
+        height: 2px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 1px;
+        margin: 4px 0;
+    }
+
+    /* ---- Pane 2: Channel List ---- */
+    .pane-channels {
+        width: 240px;
+        background: rgba(245, 243, 255, 0.95);
+        backdrop-filter: blur(20px);
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid rgba(124, 58, 237, 0.1);
+        flex-shrink: 0;
+    }
+
+    .channels-header {
+        padding: 18px 16px 12px;
+        border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .channels-header-title {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--ss-primary);
+    }
+
+    .channels-section-label {
+        padding: 12px 16px 4px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--ss-text-muted);
+    }
+
+    .channel-link {
+        display: flex;
+        align-items: center;
+        padding: 7px 12px;
+        margin: 2px 8px;
+        border-radius: 10px;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--ss-text-secondary);
+        font-size: 0.88rem;
+        font-weight: 600;
+        gap: 8px;
+        transition: all 0.18s ease;
+    }
+
+    .channel-link:hover {
+        background: rgba(124, 58, 237, 0.08);
+        color: var(--ss-primary);
+    }
+
+    .channel-link.active {
+        background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(167,139,250,0.1));
+        color: var(--ss-primary);
+        font-weight: 700;
+        box-shadow: inset 3px 0 0 var(--ss-primary);
+    }
+
+    .channel-link .channel-hash {
+        color: var(--ss-primary);
+        opacity: 0.5;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+    .channel-link.active .channel-hash { opacity: 1; }
+
+    /* ---- Pane 3: Main Chat Area ---- */
+    .pane-chat {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        min-width: 0;
+    }
+
+    .chat-topbar {
+        height: 60px;
+        border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        gap: 12px;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(16px);
+        flex-shrink: 0;
+    }
+
+    .chat-topbar-icon {
+        width: 34px;
+        height: 34px;
+        background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(167,139,250,0.08));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ss-primary);
+        font-size: 1rem;
+        font-weight: 800;
+        border: 1px solid rgba(124,58,237,0.12);
+    }
+
+    .chat-topbar-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--ss-text);
+        letter-spacing: -0.02em;
+    }
+
+    .chat-topbar-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 50rem;
+        background: rgba(124,58,237,0.1);
+        color: var(--ss-primary);
+        border: 1px solid rgba(124,58,237,0.15);
+        margin-left: auto;
+    }
+
+    /* ---- Messages ---- */
+    .chat-history {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .chat-welcome {
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .chat-welcome-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #EDE9FE, #C4B5FD);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        margin: 0 auto 1.2rem;
+        color: var(--ss-primary);
+        box-shadow: 0 8px 24px rgba(124,58,237,0.2);
+    }
+
+    .message-group {
+        display: flex;
+        gap: 12px;
+        padding: 6px 0;
+        border-radius: 12px;
+        transition: background 0.15s;
+    }
+    .message-group:hover { background: rgba(124,58,237,0.03); }
+
+    .message-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #7C3AED, #F472B6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 800;
+        font-size: 1rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(124,58,237,0.25);
+    }
+
+    .message-body { flex: 1; min-width: 0; }
+
+    .message-meta {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 3px;
+    }
+
+    .message-author {
+        font-weight: 800;
+        font-size: 0.9rem;
+        color: var(--ss-text);
+        letter-spacing: -0.01em;
+    }
+
+    .message-time {
+        font-size: 0.72rem;
+        color: var(--ss-text-muted);
+        font-weight: 500;
+    }
+
+    .message-text {
+        font-size: 0.92rem;
+        color: var(--ss-text-secondary);
+        line-height: 1.55;
+        word-break: break-word;
+    }
+
+    /* ---- Input Bar ---- */
+    .chat-input-bar {
+        padding: 16px 24px;
+        border-top: 1px solid rgba(124, 58, 237, 0.08);
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(16px);
+        flex-shrink: 0;
+    }
+
+    .chat-input-wrap {
+        display: flex;
+        align-items: center;
+        background: var(--ss-bg);
+        border: 2px solid rgba(124, 58, 237, 0.12);
+        border-radius: 1rem;
+        padding: 4px 8px 4px 16px;
+        gap: 8px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .chat-input-wrap:focus-within {
+        border-color: var(--ss-primary-light);
+        box-shadow: 0 0 0 3px var(--ss-primary-glow);
+        background: white;
+    }
+
+    .chat-input-field {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 0.92rem;
+        color: var(--ss-text);
+        padding: 8px 0;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .chat-input-field::placeholder { color: var(--ss-text-muted); }
+
+    .chat-send-btn {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #7C3AED, #A78BFA);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        flex-shrink: 0;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .chat-send-btn:hover { transform: scale(1.12); box-shadow: 0 4px 16px rgba(124,58,237,0.4); }
+    .chat-send-btn:active { transform: scale(0.96); }
+
+    /* ---- Scrollbar ---- */
+    .chat-history::-webkit-scrollbar { width: 4px; }
+    .chat-history::-webkit-scrollbar-track { background: transparent; }
+    .chat-history::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.2); border-radius: 2px; }
+</style>
+
+<div class="chat-app">
+
+    <!-- PANE 1: Tier switcher -->
+    <div class="pane-tiers">
+        <button class="tier-btn" title="Dashboard" onclick="location.href='/Home/Index'">
+            <i class="bi bi-house-door-fill"></i>
+            <span class="tier-tooltip">Dashboard</span>
+        </button>
+
+        <div class="tier-divider"></div>
+
+        <button class="tier-btn @(Model.ActiveChannel?.Tier == StudySync.Models.ChannelTier.Global ? "active" : "")"
+                onclick="switchTier('global')">
+            <i class="bi bi-globe2"></i>
+            <span class="tier-tooltip">Global Network</span>
+        </button>
+
+        <button class="tier-btn @(Model.ActiveChannel?.Tier == StudySync.Models.ChannelTier.University ? "active" : "")"
+                onclick="switchTier('university')">
+            <i class="bi bi-building"></i>
+            <span class="tier-tooltip">@Model.CurrentUser.UniversityName</span>
+        </button>
+
+        <button class="tier-btn @(Model.ActiveChannel?.Tier == StudySync.Models.ChannelTier.Major ? "active" : "")"
+                onclick="switchTier('major')">
+            <i class="bi bi-mortarboard-fill"></i>
+            <span class="tier-tooltip">@Model.CurrentUser.Major</span>
+        </button>
+    </div>
+
+    <!-- PANE 2: Channel list -->
+    <div class="pane-channels" id="channelListPane">
+        <div class="channels-header">
+            <i class="bi bi-hash" style="color:var(--ss-primary);font-weight:900;"></i>
+            <span class="channels-header-title">Channels</span>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;padding-bottom:12px;">
+            <!-- Global channels -->
+            <div id="channelGroup-global" style="display: @(Model.ActiveChannel?.Tier == StudySync.Models.ChannelTier.Global ? "block" : "none")">
+                <div class="channels-section-label d-flex justify-content-between align-items-center">
+                    <span>🌐 Global</span>
+                    <button class="btn btn-sm p-0 text-muted" data-bs-toggle="modal" data-bs-target="#createCommunityModal" title="Add Community" style="font-size:1.1rem; line-height:1;">
+                        <i class="bi bi-plus-square-fill hover-lift text-primary" style="transition:0.2s;"></i>
+                    </button>
+                </div>
+                @foreach(var c in Model.GlobalChannels) {
+                    <a href="/Community/Index?channelId=@c.Id" class="channel-link @(Model.ActiveChannel?.Id == c.Id ? "active" : "")">
+                        <span class="channel-hash">#</span>@c.Name
+                    </a>
+                }
+            </div>
+
+            <!-- University channels -->
+            <div id="channelGroup-university" style="display: @(Model.ActiveChannel?.Tier == StudySync.Models.ChannelTier.University ? "block" : "none")">
+                <div class="channels-section-label">🏛️ @Model.CurrentUser.UniversityName</div>
+                @foreach(var c in Model.UniversityChannels) {
+                    <a href="/Community/Index?channelId=@c.Id" class="channel-link @(Model.ActiveChannel?.Id == c.Id ? "active" : "")">
+                        <span class="channel-hash">#</span>@c.Name
+                    </a>
+                }
+            </div>
+
+            <!-- Major channels -->
+            <div id="channelGroup-major" style="display: @(Model.ActiveChannel?.Tier == StudySync.Models.ChannelTier.Major ? "block" : "none")">
+                <div class="channels-section-label">🎓 @Model.CurrentUser.Major</div>
+                @foreach(var c in Model.MajorChannels) {
+                    <a href="/Community/Index?channelId=@c.Id" class="channel-link @(Model.ActiveChannel?.Id == c.Id ? "active" : "")">
+                        <span class="channel-hash">#</span>@c.Name
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- User info strip at bottom -->
+        <div style="padding:12px 14px;border-top:1px solid rgba(124,58,237,0.08);display:flex;align-items:center;gap:10px;background:rgba(124,58,237,0.04);">
+            <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7C3AED,#F472B6);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:0.85rem;flex-shrink:0;">
+                @Model.CurrentUser.FullName.Substring(0,1).ToUpper()
+            </div>
+            <div style="min-width:0;">
+                <div style="font-size:0.82rem;font-weight:700;color:var(--ss-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@Model.CurrentUser.FullName</div>
+                <div style="font-size:0.7rem;color:var(--ss-accent-teal);font-weight:600;display:flex;align-items:center;gap:4px;">
+                    <span style="width:6px;height:6px;background:var(--ss-accent-teal);border-radius:50%;display:inline-block;"></span>Online
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANE 3: Main chat -->
+    <div class="pane-chat">
+        @if (Model.ActiveChannel != null)
+        {
+            <!-- Top bar -->
+            <div class="chat-topbar">
+                <div class="chat-topbar-icon">#</div>
+                <div>
+                    <div class="chat-topbar-name">@Model.ActiveChannel.Name</div>
+                    <div style="font-size:0.72rem;color:var(--ss-text-muted);margin-top:1px;">
+                        @Model.ActiveChannel.Tier channel
+                    </div>
+                </div>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button class="btn btn-sm fw-bold px-3 shadow-sm hover-lift" data-bs-toggle="modal" data-bs-target="#inviteModal" style="background:rgba(124,58,237,0.1); color:var(--ss-primary); border-radius:50rem; border:1px solid rgba(124,58,237,0.15); font-size:0.75rem;">
+                        <i class="bi bi-person-plus-fill me-1"></i>Invite
+                    </button>
+                    <span class="chat-topbar-badge">
+                        <i class="bi bi-broadcast me-1" style="color:#2DD4BF;"></i>Live
+                    </span>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="chat-history" id="chatHistory" data-channel-id="@Model.ActiveChannel.Id">
+                <!-- Channel welcome state -->
+                <div class="chat-welcome fade-in-up">
+                    <div class="chat-welcome-icon">
+                        <i class="bi bi-hash"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">Welcome to @Model.ActiveChannel.Name!</h4>
+                    <p class="text-muted" style="font-size:0.9rem;max-width:360px;margin:0 auto;">
+                        This is the beginning of the <strong>#@Model.ActiveChannel.Name</strong> channel. Say hello 👋
+                    </p>
+                </div>
+
+                @foreach(var msg in Model.RecentMessages) {
+                    <div class="message-group fade-in-up" style="animation-duration:0.3s;">
+                        <div class="message-avatar">@msg.User.FullName.Substring(0,1).ToUpper()</div>
+                        <div class="message-body">
+                            <div class="message-meta">
+                                <span class="message-author">@msg.User.FullName</span>
+                                <span class="message-time">@msg.CreatedAt.ToLocalTime().ToString("g")</span>
+                            </div>
+                            <div class="message-text">@msg.Text</div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Input bar -->
+            <div class="chat-input-bar">
+                <div class="chat-input-wrap">
+                    <i class="bi bi-emoji-smile" style="color:var(--ss-text-muted);font-size:1.1rem;cursor:pointer;"></i>
+                    <input type="text" id="chatMessageInput" class="chat-input-field"
+                           placeholder="Message #@Model.ActiveChannel.Name" autocomplete="off" />
+                    <button class="chat-send-btn" id="chatSendBtn" title="Send">
+                        <i class="bi bi-send-fill" style="font-size:0.85rem;"></i>
+                    </button>
+                </div>
+                <div style="text-align:center;margin-top:6px;font-size:0.7rem;color:var(--ss-text-muted);">
+                    Press <kbd style="padding:1px 5px;border-radius:4px;background:rgba(124,58,237,0.1);color:var(--ss-primary);font-size:0.68rem;border:1px solid rgba(124,58,237,0.2);">Enter</kbd> to send
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex align-items-center justify-content-center h-100 flex-column">
+                <div style="width:96px;height:96px;background:linear-gradient(135deg,#EDE9FE,#C4B5FD);border-radius:28px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 28px rgba(124,58,237,0.18);">
+                    <i class="bi bi-chat-dots" style="font-size:2.8rem;color:var(--ss-primary);"></i>
+                </div>
+                <h4 class="fw-bold mb-2" style="color:var(--ss-text);">Pick a channel</h4>
+                <p class="text-muted" style="font-size:0.9rem;max-width:280px;text-align:center;">
+                    Choose a channel from the left to start chatting with your campus community.
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- Create Community Modal -->
+<div class="modal fade" id="createCommunityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color:var(--ss-primary);">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Create New Community
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="CreateChannel" asp-controller="Community" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <p class="text-muted small">Create a global channel to chat about specific topics with the entire StudySync campus network.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">CHANNEL NAME</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text border-0" style="background:rgba(124,58,237,0.1);color:var(--ss-primary);">#</span>
+                            <input type="text" name="channelName" class="form-control bg-light border-0" placeholder="e.g. hackathon-2026" required pattern="[a-zA-Z0-9\-]+" title="Letters, numbers and hyphens only">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">DESCRIPTION (OPTIONAL)</label>
+                        <input type="text" name="description" class="form-control bg-light border-0" placeholder="What is this channel about?">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold" style="background:linear-gradient(135deg, #7C3AED, #A78BFA); color:white;">Create Channel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Invite Modal -->
+<div class="modal fade" id="inviteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color:var(--ss-primary);">
+                    <i class="bi bi-person-plus-fill me-2"></i>Invite to #@(Model.ActiveChannel?.Name ?? "Channel")
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Search for a student on campus to copy their profile link, or copy this channel's direct link to invite anyone.</p>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted small">CHANNEL INVITE LINK</label>
+                    <div class="input-group shadow-sm" style="border-radius:12px; overflow:hidden;">
+                        <input type="text" id="inviteLinkInput" class="form-control bg-light border-0" value="http://localhost:5178/Community/Index?channelId=@(Model.ActiveChannel?.Id)" readonly>
+                        <button class="btn btn-primary" type="button" onclick="copyInviteLink()" style="background:#7C3AED; border:none; width:80px;">Copy</button>
+                    </div>
+                    <div id="copyFeedback" class="text-success small mt-1" style="display:none;font-weight:600;"><i class="bi bi-check-circle-fill me-1"></i>Copied to clipboard!</div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-bold text-muted small">SEARCH STUDENTS</label>
+                    <div class="position-relative">
+                        <i class="bi bi-search position-absolute text-muted" style="left:12px; top:10px;"></i>
+                        <input type="text" id="userSearchInput" class="form-control bg-light border-0" placeholder="Type a name..." style="padding-left:36px;">
+                    </div>
+                </div>
+                
+                <div id="searchResults" class="list-group list-group-flush border-0 mt-2" style="max-height: 200px; overflow-y:auto; border-radius:10px;">
+                    <!-- Results populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script>
+    function switchTier(tier) {
+        ['global', 'university', 'major'].forEach(t =>
+            document.getElementById('channelGroup-' + t).style.display = 'none'
+        );
+        document.getElementById('channelGroup-' + tier).style.display = 'block';
+
+        // Update active state on buttons
+        document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+        // find button by its position (index 2=global, 3=uni, 4=major after gap)
+        const tierMap = { global: 2, university: 3, major: 4 };
+        const btns = document.querySelectorAll('.tier-btn');
+        if (btns[tierMap[tier]]) btns[tierMap[tier]].classList.add('active');
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const chatHistory = document.getElementById("chatHistory");
+        if (chatHistory) chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        const channelId = chatHistory ? chatHistory.getAttribute("data-channel-id") : null;
+        if (!channelId) return;
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        function appendMessage(fullname, init, message, time) {
+            const group = document.createElement("div");
+            group.className = "message-group fade-in-up";
+            group.style.animationDuration = "0.3s";
+            group.innerHTML = `
+                <div class="message-avatar">${init}</div>
+                <div class="message-body">
+                    <div class="message-meta">
+                        <span class="message-author">${fullname}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-text">${message}</div>
+                </div>
+            `;
+            chatHistory.appendChild(group);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        connection.on("ReceiveMessage", appendMessage);
+
+        connection.start()
+            .then(() => connection.invoke("JoinChannel", channelId).catch(console.error))
+            .catch(console.error);
+
+        function sendMessage() {
+            const input = document.getElementById("chatMessageInput");
+            if (input && input.value.trim()) {
+                connection.invoke("SendMessage", channelId, input.value.trim()).catch(console.error);
+                input.value = "";
+            }
+        }
+
+        const msgInput = document.getElementById("chatMessageInput");
+        const sendBtn = document.getElementById("chatSendBtn");
+
+        if (msgInput) {
+            msgInput.addEventListener("keypress", e => {
+                if (e.key === "Enter") sendMessage();
+            });
+        }
+
+        if (sendBtn) {
+            sendBtn.addEventListener("click", sendMessage);
+        }
+    });
+
+    // Copy Invite Link
+    function copyInviteLink() {
+        const input = document.getElementById("inviteLinkInput");
+        input.select();
+        document.execCommand("copy");
+        
+        const feedback = document.getElementById("copyFeedback");
+        feedback.style.display = "block";
+        setTimeout(() => feedback.style.display = "none", 3000);
+    }
+
+    // User Search debounce
+    let searchTimeout;
+    const searchInput = document.getElementById("userSearchInput");
+    const searchResults = document.getElementById("searchResults");
+
+    if (searchInput) {
+        searchInput.addEventListener("input", function() {
+            clearTimeout(searchTimeout);
+            const query = this.value;
+            
+            if(query.length < 2) {
+                searchResults.innerHTML = "";
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/Community/SearchUsers?query=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        searchResults.innerHTML = "";
+                        if(data.length === 0) {
+                            searchResults.innerHTML = '<div class="text-muted small text-center p-3">No students found.</div>';
+                            return;
+                        }
+                        
+                        data.forEach(user => {
+                            const initial = user.fullName.substring(0,1).toUpperCase();
+                            const item = document.createElement("div");
+                            item.className = "list-group-item d-flex justify-content-between align-items-center py-2 px-3 border-0 mb-1 rounded bg-light hover-lift cursor-pointer";
+                            item.style.cursor = "pointer";
+                            item.innerHTML = `
+                                <div class="d-flex align-items-center gap-2">
+                                    <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7C3AED,#F472B6);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:0.8rem;">
+                                        ${initial}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size:0.85rem;color:var(--ss-text);">${user.fullName}</div>
+                                        <div class="text-muted" style="font-size:0.7rem;">${user.major || "Undeclared"} · ${user.universityName || "Campus"}</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1" onclick="copyProfileLink('${user.id}')" style="font-size:0.7rem; font-weight:700;">Copy Profile Link</button>
+                            `;
+                            searchResults.appendChild(item);
+                        });
+                    });
+            }, 300);
+        });
+    }
+
+    function copyProfileLink(userId) {
+        // Creates a dummy element to copy text
+        const dummy = document.createElement("textarea");
+        document.body.appendChild(dummy);
+        dummy.value = window.location.origin + "/Profile/Visit?id=" + userId; // Assuming you have public profile viewing
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+        alert("Profile link copied!");
+    }
+</script>

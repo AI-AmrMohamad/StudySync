@@ -1,0 +1,316 @@
+@model StudySync.Models.ViewModels.HomeDashboardViewModel
+@{
+    ViewData["Title"] = "StudySync Command Center";
+    // Using current role from user
+    var currentRole = Model?.CurrentUser?.ActiveRole ?? "LearningMode";
+}
+
+@if (Model?.CurrentUser != null) {
+<div class="container-fluid fade-in-up px-md-4">
+    <!-- Hero Section -->
+    <div class="row py-4 mb-3">
+        <div class="col-12 text-center">
+            <h1 style="font-weight: 800; font-size: 3rem;" class="mb-2 text-dark">
+                Welcome back, <span class="text-gradient">@Model.CurrentUser.FullName.Split(' ')[0]</span> 👋
+            </h1>
+            <p class="lead mx-auto mb-3" style="opacity: 0.75; font-size: 1.15rem;">
+                Your campus platform for chatting, live streaming, skill swapping, and deep focus.
+            </p>
+            <div>
+                <span class="badge bg-white text-dark py-2 px-4 shadow-sm border" style="border-radius: var(--ss-radius-pill);">
+                    <i class="bi bi-stars text-warning me-1"></i>
+                    <span id="heroCtaText" class="text-gradient-teal" style="font-weight: 700;">
+                        @(currentRole == "LearningMode" ? "Ready to master something new today?" : "Ready to share your expertise today?")
+                    </span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3-Column Bento Box Grid -->
+    <div class="row g-4 mb-5">
+        
+        <!-- LEFT COLUMN: Profile & Nav -->
+        <div class="col-lg-3 col-md-4">
+            <!-- Profile Card -->
+            <div class="card border-0 shadow-sm mb-4 bento-card p-2 hover-lift" style="border-radius: 1.2rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);">
+                <div class="card-body text-center">
+                    <div class="avatar-placeholder bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center shadow-sm" style="width:80px;height:80px;">
+                        <i class="bi bi-person-fill display-4 text-secondary"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">@Model.CurrentUser.FullName</h5>
+                    <p class="text-muted small mb-2">@(string.IsNullOrWhiteSpace(Model.CurrentUser.ProfileHeadline) ? "Student Explorer" : Model.CurrentUser.ProfileHeadline)</p>
+                    <div class="text-warning mb-3 small d-flex justify-content-center align-items-center">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        <span class="text-dark fw-bold ms-2">@Model.CurrentUser.Rating</span>
+                    </div>
+                    <div class="d-flex justify-content-around bg-white p-2 rounded-3 border">
+                        <div class="text-center">
+                            <i class="bi bi-coin text-primary d-block mb-1 fs-5"></i>
+                            <span class="fw-bold d-block text-dark" style="font-size:0.9rem;">@Model.CurrentUser.TimeCredits</span>
+                        </div>
+                        <div class="text-center">
+                            <i class="bi bi-lightning text-warning d-block mb-1 fs-5"></i>
+                            <span class="fw-bold d-block text-dark" style="font-size:0.9rem;">@Model.CurrentUser.FocusPoints</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Channels -->
+            <div class="card border-0 shadow-sm bento-card" style="border-radius: 1.2rem;">
+                <div class="card-header bg-transparent border-0 pt-4 pb-2 px-4">
+                    <h6 class="fw-bold mb-0 text-muted text-uppercase small">Your Channels</h6>
+                </div>
+                <div class="list-group list-group-flush border-0 px-2 pb-3">
+                    @foreach (var ch in Model.JoinedChannels) {
+                        <a href="#" class="list-group-item list-group-item-action border-0 py-2 text-muted fw-bold rounded-3 mb-1">
+                            <span class="text-primary me-2">#</span> @ch.Name
+                        </a>
+                    }
+                    @if(!Model.JoinedChannels.Any()) {
+                        <div class="p-3 text-muted small text-center opacity-75">
+                            <i class="bi bi-chat-left-dots d-block fs-3 mb-2"></i>
+                            No channels joined yet. Start exploring!
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER COLUMN: Feed & Actions -->
+        <div class="col-lg-6 col-md-8">
+            <!-- Top Bar -->
+            <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm" style="border-radius: var(--ss-radius-pill);">
+                <div class="input-group border-0 px-2 w-75 position-relative">
+                    <span class="input-group-text bg-transparent border-0 pe-2"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="omniSearch" class="form-control border-0 shadow-none bg-transparent fw-medium" placeholder="Search subjects, rooms, or jobs..." autocomplete="off" />
+                    <ul id="omniSearchResults" class="dropdown-menu w-100 shadow-lg border-0 mt-3" style="position: absolute; top: 100%; left: 0; z-index: 1000; border-radius: 1rem; display: none;">
+                    </ul>
+                </div>
+                <!-- Role Toggle -->
+                <div class="form-check form-switch fs-5 mb-0 pe-4 border-start ps-4 pt-1">
+                    <input class="form-check-input mt-1" type="checkbox" id="roleToggleSwitch" @(currentRole=="TeachingMode"?"checked":"")>
+                    <label class="form-check-label small fw-bold text-muted ps-1" for="roleToggleSwitch" style="font-size:0.85rem; transform: translateY(-2px); display:inline-block;">Teach</label>
+                </div>
+            </div>
+
+            <!-- Live Rooms Horizontal Scroller -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-end mb-3 px-2">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center">Live Focus Rooms <span class="badge bg-danger rounded-pill pulse-indicator ms-2 py-1 px-2" style="font-size:0.6rem;">LIVE</span></h5>
+                    <a asp-controller="DeepWork" asp-action="Index" class="text-decoration-none fw-bold text-primary hover-lift" style="font-size:0.85rem;">View All <i class="bi bi-arrow-right"></i></a>
+                </div>
+                <div class="d-flex overflow-auto pb-3 gap-3 hide-scrollbar px-1">
+                    @foreach (var r in Model.LiveRooms) {
+                        <div class="card border border-primary border-opacity-25 shadow-sm searchable-card flex-shrink-0 hover-lift" style="width: 250px; border-radius: 1.2rem; cursor:pointer;" onclick="location.href='/DeepWork/Room/@r.Id'">
+                            <div class="card-body p-3">
+                                <h6 class="fw-bold text-truncate mb-1">@r.Title</h6>
+                                <p class="small text-muted mb-3 text-truncate"><i class="bi bi-tag-fill me-1 text-primary opacity-50"></i>@r.Topic</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-light text-dark shadow-sm px-2 py-1"><i class="bi bi-people-fill text-muted me-1"></i>0</span>
+                                    <span class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="font-size:0.8rem;">Join</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if(!Model.LiveRooms.Any()){
+                        <div class="card border-0 bg-light w-100 p-4 text-center text-muted shadow-sm" style="border-radius:1.2rem;">
+                            <i class="bi bi-moon-stars fs-3 mb-2 opacity-50"></i>
+                            <div class="small fw-bold">No active rooms. Be the first to start one!</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Marketplace Section -->
+            <div class="px-2">
+                <div class="d-flex justify-content-between align-items-end mb-3">
+                    <h5 class="fw-bold mb-0" id="centerTitleMarketplace">Available Tutors & Experts</h5>
+                    <a asp-controller="Marketplace" asp-action="Index" class="text-decoration-none fw-bold text-primary hover-lift" style="font-size:0.85rem;">Browse All <i class="bi bi-arrow-right"></i></a>
+                </div>
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var job in Model.OpenJobs) {
+                        <div class="card border border-light shadow-sm searchable-card hover-lift" style="border-radius: 1.2rem; transition: transform 0.2s;">
+                            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                                <div class="pe-3">
+                                    <h6 class="fw-bold mb-1">@job.Title</h6>
+                                    <div class="small text-muted text-truncate" style="max-width:300px;">@job.Description</div>
+                                </div>
+                                <div class="text-end flex-shrink-0">
+                                    <div class="badge bg-white border shadow-sm px-3 py-2" style="border-radius:var(--ss-radius-pill);">
+                                        <i class="bi bi-coin text-primary me-1 fs-6 align-middle"></i> 
+                                        <span class="fw-bold text-dark fs-6 align-middle">@job.CreditReward</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if(!Model.OpenJobs.Any()) {
+                        <div class="card border-0 bg-light p-4 text-center text-muted shadow-sm" style="border-radius:1.2rem;">
+                            <i class="bi bi-emoji-smile fs-3 mb-2 opacity-50"></i>
+                            <div class="small fw-bold">No open requests currently. Check back later!</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Community Drawer -->
+        <div class="col-lg-3 col-md-12">
+            <div class="card border-0 shadow-sm sticky-top hover-lift" style="border-radius: 1.2rem; top: 100px; height: calc(100vh - 120px); max-height: 600px; cursor: pointer;" onclick="location.href='/Community/Index'">
+                <div class="card-header bg-white border-bottom p-3 px-4 d-flex justify-content-between align-items-center" style="border-top-left-radius: 1.2rem; border-top-right-radius: 1.2rem;">
+                    <div class="fw-bold mb-0"><span class="text-primary me-1">#</span> global-lounge</div>
+                    <a asp-controller="Community" asp-action="Index" class="badge bg-primary text-white rounded-pill px-2 text-decoration-none shadow-sm" style="font-size:0.7rem;">Enter Hub <i class="bi bi-box-arrow-up-right ms-1"></i></a>
+                </div>
+                <div class="card-body overflow-auto bg-light p-3" style="background-image: radial-gradient(circle at center, rgba(108, 92, 231, 0.03) 0%, transparent 100%); display:flex; flex-direction:column; gap:12px;">
+                    
+                    <div class="text-center my-2">
+                        <span class="badge bg-secondary bg-opacity-25 text-muted shadow-none py-1" style="font-size:0.65rem;">Today 10:42 AM</span>
+                    </div>
+
+                    <div class="d-flex align-items-start">
+                        <div class="bg-primary bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center me-2 flex-shrink-0 shadow-sm" style="width:32px;height:32px;font-size:0.8rem;font-weight:bold;">S</div>
+                        <div class="bg-white p-2 px-3 rounded-3 shadow-sm small" style="border-top-left-radius: 0 !important; max-width:85%;">
+                            Anyone taking the SWE midterm tomorrow? I have a study guide.
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start flex-row-reverse">
+                        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center ms-2 flex-shrink-0 shadow-sm" style="width:32px;height:32px;font-size:0.8rem;font-weight:bold;">Me</div>
+                        <div class="bg-primary bg-gradient text-white p-2 px-3 rounded-3 shadow-sm small" style="border-top-right-radius: 0 !important; max-width:85%;">
+                            Yeah, setting up a DeepWork room for it now! Join in.
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top p-3" style="border-bottom-left-radius: 1.2rem; border-bottom-right-radius: 1.2rem;">
+                    <div class="input-group shadow-sm rounded-pill p-1 border">
+                        <input type="text" class="form-control border-0 bg-transparent shadow-none ms-2" placeholder="Message..." style="font-size:0.9rem;">
+                        <button class="btn btn-primary rounded-pill d-flex align-items-center justify-content-center px-3 flex-shrink-0"><i class="bi bi-send-fill" style="font-size:0.9rem;"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/dashboard.js"></script>
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .pulse-indicator {
+            animation: pulse-red 1.5s infinite;
+        }
+        @@keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+    </style>
+}
+} else {
+    // SPLASH: unauthenticated hero
+    <!-- Full-bleed hero — must escape the container set in _Layout -->
+    <style>
+        /* Override the container padding for the hero only */
+        body > div.container { padding-top: 0 !important; margin-top: 0 !important; }
+    </style>
+
+    <div class="hero-landing text-center text-white fade-in-up" style="margin: -1.5rem -12px 0; padding: 0 12px;">
+        <!-- decorative orbs -->
+        <div class="hero-orb" style="width:400px;height:400px;background:#F472B6;top:-100px;right:5%;"></div>
+        <div class="hero-orb" style="width:350px;height:350px;background:#2DD4BF;bottom:-80px;left:3%;animation-delay:-3s;"></div>
+
+        <div class="container py-5" style="position:relative;z-index:2;">
+            <div class="row justify-content-center">
+                <div class="col-lg-9 col-xl-8">
+                    <span class="badge px-4 py-2 mb-4 d-inline-flex align-items-center gap-2 fade-in-up-delay-1"
+                          style="background:rgba(255,255,255,0.18);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.3);border-radius:50rem;font-size:0.82rem;">
+                        <span class="d-inline-block rounded-circle" style="width:8px;height:8px;background:#2DD4BF;box-shadow:0 0 8px #2DD4BF;"></span>
+                        StudySync Campus Network · Now Live
+                    </span>
+
+                    <h1 class="display-2 fw-bold mb-4 fade-in-up-delay-1" style="letter-spacing:-0.04em;line-height:1.1;">
+                        The campus you'll
+                        <br><span style="background:linear-gradient(90deg,#FBBF24,#F472B6,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">never want to leave</span>
+                    </h1>
+
+                    <p class="lead mb-5 fade-in-up-delay-2" style="font-size:1.25rem;opacity:0.88;max-width:600px;margin:0 auto 2rem;">
+                        Chat with classmates, live stream study sessions, swap skills, and earn credits — all in one beautifully crafted platform.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-3 justify-content-center fade-in-up-delay-3">
+                        <a asp-area="Identity" asp-page="/Account/Register"
+                           class="btn btn-lg px-5 py-3 fw-bold shadow-lg"
+                           style="background:rgba(255,255,255,0.95);color:#7C3AED;border-radius:50rem;font-size:1rem;box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+                            <i class="bi bi-rocket-takeoff me-2"></i>Get Started — It's Free
+                        </a>
+                        <a asp-area="Identity" asp-page="/Account/Login"
+                           class="btn btn-lg btn-glass px-5 py-3 fw-bold"
+                           style="border-radius:50rem;font-size:1rem;">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Log In
+                        </a>
+                    </div>
+
+                    <!-- trust badges -->
+                    <div class="mt-5 d-flex flex-wrap gap-3 justify-content-center opacity-75 fade-in-up-delay-3" style="font-size:0.82rem;">
+                        <span><i class="bi bi-shield-check me-1"></i>P2P Encrypted</span>
+                        <span><i class="bi bi-people-fill me-1"></i>Campus-Verified Users</span>
+                        <span><i class="bi bi-star-fill text-warning me-1"></i>Gamified Rewards</span>
+                        <span><i class="bi bi-broadcast me-1"></i>Live Screen Sharing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Section -->
+    <div class="container py-5 my-3">
+        <div class="text-center mb-5">
+            <p class="text-uppercase fw-bold mb-2" style="font-size:0.8rem;letter-spacing:0.12em;color:var(--ss-primary);">Everything you need</p>
+            <h2 class="display-5 fw-bold">Built for student life</h2>
+            <p class="text-muted lead mt-2" style="max-width:500px;margin:0 auto;">No fluff. Just the tools that actually matter to you.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card fade-in-scale h-100">
+                    <div class="feature-icon" style="background:linear-gradient(135deg,#EDE9FE,#C4B5FD);">
+                        <i class="bi bi-arrow-left-right" style="color:#7C3AED;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Skill Swapping</h5>
+                    <p class="text-muted mb-0" style="font-size:0.92rem;">Trade expertise using Time-Credits. Teach Python, learn Calculus — no money required.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card fade-in-scale h-100" style="animation-delay:0.1s;">
+                    <div class="feature-icon" style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);">
+                        <i class="bi bi-clock-history" style="color:#B45309;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">DeepWork Rooms</h5>
+                    <p class="text-muted mb-0" style="font-size:0.92rem;">Lock in with peers. Synchronized Pomodoro timers, live focus sessions, and gamified Focus Points.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card fade-in-scale h-100" style="animation-delay:0.2s;">
+                    <div class="feature-icon" style="background:linear-gradient(135deg,#CCFBF1,#99F6E4);">
+                        <i class="bi bi-chat-dots-fill" style="color:#0F766E;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Campus Chat</h5>
+                    <p class="text-muted mb-0" style="font-size:0.92rem;">Auto-enrolled into your University & Major lounges. Discord-style, built for students.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card fade-in-scale h-100" style="animation-delay:0.3s;">
+                    <div class="feature-icon" style="background:linear-gradient(135deg,#FCE7F3,#FBCFE8);">
+                        <i class="bi bi-display-fill" style="color:#BE185D;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Live Streaming</h5>
+                    <p class="text-muted mb-0" style="font-size:0.92rem;">Native WebRTC peer-to-peer screen sharing. No third-party tools. Just open a room and go live.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
