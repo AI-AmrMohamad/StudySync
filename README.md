@@ -1,0 +1,2 @@
+# StudySync
+Software(MVC)-Proj
