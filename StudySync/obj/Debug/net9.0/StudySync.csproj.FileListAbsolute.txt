@@ -299,3 +299,4 @@ C:\Users\AmrMo\OneDrive\Desktop\StudySync\StudySync\obj\Debug\net9.0\ref\StudySy
 C:\Users\AmrMo\OneDrive\Desktop\StudySync\StudySync\obj\Debug\net9.0\compressed\t5pn6uwoqd-i7nb57cx6k.gz
 C:\Users\AmrMo\OneDrive\Desktop\StudySync\StudySync\obj\Debug\net9.0\compressed\wa4ym9eo2y-oys83qkild.gz
 C:\Users\AmrMo\OneDrive\Desktop\StudySync\StudySync\obj\Debug\net9.0\compressed\ijcfhf8b4t-ko4xt5s50n.gz
+C:\Users\AmrMo\OneDrive\Desktop\StudySync\StudySync\obj\Debug\net9.0\StudySync.sourcelink.json

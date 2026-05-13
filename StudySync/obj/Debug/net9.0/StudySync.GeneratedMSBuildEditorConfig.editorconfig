@@ -48,20 +48,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Admin/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Admin/Transactions.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVHJhbnNhY3Rpb25zLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Admin/Users.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVXNlcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Community/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tbXVuaXR5XEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Dashboard/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGFzaGJvYXJkXEluZGV4LmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/DeepWork/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVlcFdvcmtcSW5kZXguY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/DeepWork/Room.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVlcFdvcmtcUm9vbS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Home/Index.cshtml]
@@ -72,16 +76,28 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Marketplace/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFya2V0cGxhY2VcQ3JlYXRlLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Marketplace/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFya2V0cGxhY2VcSW5kZXguY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Profile/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZmlsZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Session/Browse.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2Vzc2lvblxCcm93c2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Session/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2Vzc2lvblxDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Session/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2Vzc2lvblxEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Session/MyHosted.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2Vzc2lvblxNeUhvc3RlZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Session/MyJoined.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2Vzc2lvblxNeUpvaW5lZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/AmrMo/OneDrive/Desktop/StudySync/StudySync/Views/Shared/Error.cshtml]

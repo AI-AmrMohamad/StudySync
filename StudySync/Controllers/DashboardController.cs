@@ -25,32 +25,93 @@ namespace StudySync.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            var bookings = await _context.SwapBookings
-                .Include(b => b.Skill)
-                .Include(b => b.Requester)
-                .Include(b => b.Provider)
-                .Where(b => (b.RequesterId == user.Id || b.ProviderId == user.Id)
-                         && b.Status != BookingStatus.Cancelled)
-                .OrderByDescending(b => b.CreatedAt)
+            var userId = user.Id;
+
+            // Upcoming sessions I'm hosting
+            var hostedSessions = await _context.Sessions
+                .Include(s => s.Enrollments)
+                .Where(s => s.HostId == userId && s.Status == SessionStatus.Open && s.ScheduledAt > DateTime.UtcNow)
+                .OrderBy(s => s.ScheduledAt)
+                .Take(5)
                 .ToListAsync();
+
+            // Upcoming sessions I've joined
+            var joinedEnrollments = await _context.SessionEnrollments
+                .Include(e => e.Session)
+                    .ThenInclude(s => s.Host)
+                .Include(e => e.Session.Enrollments)
+                .Where(e => e.AttendeeId == userId
+                            && e.Session.Status == SessionStatus.Open
+                            && e.Session.ScheduledAt > DateTime.UtcNow)
+                .OrderBy(e => e.Session.ScheduledAt)
+                .Take(5)
+                .ToListAsync();
+
+            // Stats
+            var sessionsHostedCount = await _context.Sessions.CountAsync(s => s.HostId == userId);
+            var sessionsJoinedCount = await _context.SessionEnrollments.CountAsync(e => e.AttendeeId == userId);
+
+            // Recent transactions
+            var recentTx = await _context.CreditTransactions
+                .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(8)
+                .ToListAsync();
+
+            // Merge upcoming sessions (host + joined) and sort by time
+            var upcoming = new List<UpcomingSessionViewModel>();
+
+            upcoming.AddRange(hostedSessions.Select(s => new UpcomingSessionViewModel
+            {
+                Id = s.Id,
+                Title = s.Title,
+                Topic = s.Topic,
+                Category = s.Category,
+                ScheduledAt = s.ScheduledAt,
+                DurationMinutes = s.DurationMinutes,
+                CreditCost = s.CreditCost,
+                MaxAttendees = s.MaxAttendees,
+                EnrolledCount = s.Enrollments.Count,
+                Status = s.Status,
+                IsHost = true,
+                HostName = user.FullName,
+                HostPhotoPath = user.ProfilePhotoPath
+            }));
+
+            upcoming.AddRange(joinedEnrollments.Select(e => new UpcomingSessionViewModel
+            {
+                Id = e.Session.Id,
+                Title = e.Session.Title,
+                Topic = e.Session.Topic,
+                Category = e.Session.Category,
+                ScheduledAt = e.Session.ScheduledAt,
+                DurationMinutes = e.Session.DurationMinutes,
+                CreditCost = e.Session.CreditCost,
+                MaxAttendees = e.Session.MaxAttendees,
+                EnrolledCount = e.Session.Enrollments.Count,
+                Status = e.Session.Status,
+                IsHost = false,
+                HostName = e.Session.Host.FullName,
+                HostPhotoPath = e.Session.Host.ProfilePhotoPath
+            }));
+
+            upcoming = upcoming.OrderBy(s => s.ScheduledAt).Take(5).ToList();
 
             var viewModel = new DashboardViewModel
             {
                 FullName = user.FullName,
                 Major = user.Major,
                 TimeCredits = user.TimeCredits,
-                FocusPoints = user.FocusPoints,
-                UpcomingBookings = bookings.Select(b => new SwapBookingViewModel
+                SessionsHosted = sessionsHostedCount,
+                SessionsJoined = sessionsJoinedCount,
+                UpcomingSessions = upcoming,
+                RecentTransactions = recentTx.Select(t => new TransactionLogViewModel
                 {
-                    Id = b.Id,
-                    SkillName = b.Skill.Name,
-                    OtherUserName = b.RequesterId == user.Id ? b.Provider.FullName : b.Requester.FullName,
-                    Role = b.RequesterId == user.Id ? "Requester" : "Provider",
-                    CreditCost = b.CreditCost,
-                    RequesterConfirmed = b.RequesterConfirmed,
-                    ProviderConfirmed = b.ProviderConfirmed,
-                    Status = b.Status,
-                    CreatedAt = b.CreatedAt
+                    Id = t.Id,
+                    AmountChange = t.AmountChange,
+                    Type = t.Type,
+                    Note = t.Note,
+                    CreatedAt = t.CreatedAt
                 }).ToList()
             };
 

@@ -1,0 +1,86 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<style>
+    .stat-card { border-radius: 1.2rem; transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-4px); }
+    .stat-num { font-size: 2.8rem; font-weight: 800; line-height: 1; }
+</style>
+
+<div class="row mb-5 align-items-center">
+    <div class="col">
+        <h1 class="display-5 fw-bold mb-1">
+            <i class="bi bi-shield-lock-fill text-danger me-2"></i> Admin Portal
+        </h1>
+        <p class="text-muted fs-5 mb-0">Manage users, monitor transactions, and maintain community trust</p>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card border-0 shadow-sm text-center p-4 h-100" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+            <i class="bi bi-people-fill text-white mb-2" style="font-size:2.2rem;"></i>
+            <div class="stat-num text-white">@ViewBag.UserCount</div>
+            <div class="text-white-50 mt-1 fw-600 small">Total Users</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card border-0 shadow-sm text-center p-4 h-100" style="background:linear-gradient(135deg,#f093fb,#f5576c);">
+            <i class="bi bi-arrow-left-right text-white mb-2" style="font-size:2.2rem;"></i>
+            <div class="stat-num text-white">@ViewBag.BookingCount</div>
+            <div class="text-white-50 mt-1 fw-600 small">Total Swaps</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card border-0 shadow-sm text-center p-4 h-100" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
+            <i class="bi bi-coin text-white mb-2" style="font-size:2.2rem;"></i>
+            <div class="stat-num text-white">@ViewBag.TransactionCount</div>
+            <div class="text-white-50 mt-1 fw-600 small">Transactions</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card border-0 shadow-sm text-center p-4 h-100" style="background:linear-gradient(135deg,#fa709a,#fee140);">
+            <i class="bi bi-slash-circle-fill text-white mb-2" style="font-size:2.2rem;"></i>
+            <div class="stat-num text-white">@ViewBag.BannedCount</div>
+            <div class="text-white-50 mt-1 fw-600 small">Banned Users</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm hover-lift" style="border-radius:1.2rem;">
+            <div class="card-body p-4 d-flex align-items-center gap-4">
+                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:60px;height:60px;background:rgba(124,58,237,0.1);">
+                    <i class="bi bi-people-fill text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1">User Management</h5>
+                    <p class="text-muted mb-2 small">View all users, ban/unban accounts, adjust credits</p>
+                    <a asp-action="Users" class="btn btn-primary btn-sm rounded-pill px-3" id="admin-users-btn">
+                        <i class="bi bi-arrow-right me-1"></i>Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm hover-lift" style="border-radius:1.2rem;">
+            <div class="card-body p-4 d-flex align-items-center gap-4">
+                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:60px;height:60px;background:rgba(244,114,182,0.1);">
+                    <i class="bi bi-receipt-cutoff" style="color:#F472B6;font-size:2rem;"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1">Transaction Logs</h5>
+                    <p class="text-muted mb-2 small">Full audit trail of all credit movements and disputes</p>
+                    <a asp-action="Transactions" class="btn btn-sm rounded-pill px-3 fw-bold" style="background:#F472B6;color:#fff;" id="admin-transactions-btn">
+                        <i class="bi bi-arrow-right me-1"></i>View Logs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

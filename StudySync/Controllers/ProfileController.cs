@@ -48,18 +48,6 @@ namespace StudySync.Controllers
                         user.UserSkills.Add(new UserSkill { SkillId = s.Id, IsTeaching = true });
                     }
                 }
-                
-                // Add demo bounty if none
-                if (!await _context.HelpBounties.AnyAsync(h => h.RequesterId == user.Id))
-                {
-                    _context.HelpBounties.Add(new HelpBounty { 
-                        RequesterId = user.Id, 
-                        Title = "Algorithm Debugging", 
-                        Description = "Helped debug a difficult merge sort implementation.", 
-                        CreditReward = 50, 
-                        Status = BountyStatus.Completed 
-                    });
-                }
                 await _context.SaveChangesAsync();
             }
 
@@ -68,8 +56,7 @@ namespace StudySync.Controllers
                 CurrentUser = user,
                 AllAvailableSkills = await _context.Skills.ToListAsync(),
                 TeachingSkills = user.UserSkills.Where(us => us.IsTeaching).Select(us => us.Skill).ToList(),
-                LearningSkills = user.UserSkills.Where(us => !us.IsTeaching).Select(us => us.Skill).ToList(),
-                CompletedBounties = await _context.HelpBounties.Where(h => h.RequesterId == user.Id && h.Status == BountyStatus.Completed).ToListAsync()
+                LearningSkills = user.UserSkills.Where(us => !us.IsTeaching).Select(us => us.Skill).ToList()
             };
 
             vm.SettingsForm = new ProfileSettingsForm
@@ -213,6 +200,75 @@ namespace StudySync.Controllers
 
             await _context.SaveChangesAsync();
             return Json(new { success = true, id = targetSkillId, name = name.Trim() });
+        }
+
+        // POST: /Profile/UploadPhoto
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadPhoto(IFormFile photo)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (photo == null || photo.Length == 0)
+                return Json(new { success = false, message = "No file selected." });
+
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var extension = Path.GetExtension(photo.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                return Json(new { success = false, message = "Only image files (jpg, png, gif, webp) are allowed." });
+
+            // Validate file size (max 5 MB)
+            if (photo.Length > 5 * 1024 * 1024)
+                return Json(new { success = false, message = "File size must be less than 5 MB." });
+
+            // Build save path
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
+            Directory.CreateDirectory(uploadsFolder);
+
+            // Delete old photo if exists
+            if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+            {
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePhotoPath.TrimStart('/'));
+                if (System.IO.File.Exists(oldPath))
+                    System.IO.File.Delete(oldPath);
+            }
+
+            var fileName = $"{user.Id}_{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await photo.CopyToAsync(stream);
+            }
+
+            user.ProfilePhotoPath = $"/uploads/avatars/{fileName}";
+            await _userManager.UpdateAsync(user);
+
+            return Json(new { success = true, photoUrl = user.ProfilePhotoPath });
+        }
+
+        // GET: /Profile/CreditHistory
+        public async Task<IActionResult> CreditHistory()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var transactions = await _context.CreditTransactions
+                .Where(t => t.UserId == user.Id)
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(20)
+                .ToListAsync();
+
+            return Json(transactions.Select(t => new
+            {
+                t.Id,
+                t.AmountChange,
+                Type = t.Type.ToString(),
+                t.Note,
+                CreatedAt = t.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+            }));
         }
     }
 }

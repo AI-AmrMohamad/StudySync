@@ -1,0 +1,119 @@
+@model List<StudySync.Models.ViewModels.TransactionLogViewModel>
+@using StudySync.Models
+@{
+    ViewData["Title"] = "Transaction Logs";
+    int currentPage = (int)ViewBag.CurrentPage;
+    int totalPages = (int)ViewBag.TotalPages;
+}
+
+<style>
+    .tx-debit { color: #E17055; font-weight: 700; }
+    .tx-credit { color: #00B894; font-weight: 700; }
+    .tx-admin { color: #6C5CE7; font-weight: 700; }
+    .type-badge { border-radius: 2rem; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; }
+</style>
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="display-6 fw-bold mb-1">
+            <i class="bi bi-receipt-cutoff me-2" style="color:#F472B6;"></i>Transaction Logs
+        </h1>
+        <p class="text-muted mb-0">Full audit trail of all credit movements — page @currentPage of @totalPages</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1"></i>Admin Home
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius:1.2rem;overflow:hidden;">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="transactions-table">
+            <thead style="background:rgba(244,114,182,0.06);">
+                <tr>
+                    <th class="ps-4 py-3">#</th>
+                    <th>User</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Note</th>
+                    <th class="pe-4 text-end">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                            No transactions yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var tx in Model)
+                {
+                    <tr id="tx-@tx.Id">
+                        <td class="ps-4 align-middle text-muted small">@tx.Id</td>
+                        <td class="align-middle">
+                            <div class="fw-bold">@tx.UserFullName</div>
+                            <small class="text-muted">@tx.UserEmail</small>
+                        </td>
+                        <td class="align-middle">
+                            @switch (tx.Type)
+                            {
+                                case TransactionType.SessionJoin:
+                                    <span class="type-badge" style="background:rgba(225,112,85,0.12);color:#E17055;">
+                                        <i class="bi bi-arrow-up-right me-1"></i>Session Join
+                                    </span>
+                                    break;
+                                case TransactionType.SessionEarned:
+                                    <span class="type-badge" style="background:rgba(0,184,148,0.12);color:#00B894;">
+                                        <i class="bi bi-arrow-down-left me-1"></i>Session Earned
+                                    </span>
+                                    break;
+                                case TransactionType.SessionRefund:
+                                    <span class="type-badge" style="background:rgba(108,92,231,0.12);color:#6C5CE7;">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Session Refund
+                                    </span>
+                                    break;
+                                default:
+                                    <span class="type-badge" style="background:rgba(253,203,110,0.18);color:#B7791F;">
+                                        <i class="bi bi-person-gear me-1"></i>Admin Adj.
+                                    </span>
+                                    break;
+                            }
+                        </td>
+                        <td class="align-middle">
+                            @if (tx.AmountChange > 0)
+                            {
+                                <span class="tx-credit">+@tx.AmountChange <i class="bi bi-coin"></i></span>
+                            }
+                            else
+                            {
+                                <span class="tx-debit">@tx.AmountChange <i class="bi bi-coin"></i></span>
+                            }
+                        </td>
+                        <td class="align-middle text-muted small" style="max-width:260px;">@(tx.Note ?? "—")</td>
+                        <td class="pe-4 align-middle text-end text-muted small text-nowrap">
+                            @tx.CreatedAt.ToString("MMM dd, yyyy")
+                            <div>@tx.CreatedAt.ToString("HH:mm") UTC</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if (totalPages > 1)
+{
+    <nav class="mt-4 d-flex justify-content-center" id="transactions-pagination">
+        <ul class="pagination">
+            @for (int p = 1; p <= totalPages; p++)
+            {
+                <li class="page-item @(p == currentPage ? "active" : "")">
+                    <a class="page-link rounded-3 mx-1" href="@Url.Action("Transactions", new { page = p })">@p</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

@@ -1,26 +1,17 @@
 namespace StudySync.Models
 {
-    public enum BookingStatus
-    {
-        Pending,
-        Confirmed,
-        Completed,
-        Cancelled
-    }
-
-    public enum BountyStatus
+    public enum SessionStatus
     {
         Open,
-        InProgress,
         Completed,
         Cancelled
     }
 
     public enum TransactionType
     {
-        SwapDebit,
-        SwapCredit,
-        FocusReward,
+        SessionJoin,
+        SessionEarned,
+        SessionRefund,
         AdminAdjustment
     }
 }

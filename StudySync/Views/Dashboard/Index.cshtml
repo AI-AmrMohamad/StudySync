@@ -3,168 +3,150 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="row mb-5 align-items-center">
-    <div class="col-md-8">
-        <h1 class="display-5 fw-bold mb-1">
-            Welcome, <span class="text-gradient">@Model.FullName</span>! <span class="fs-2">👋</span>
-        </h1>
-        <p class="text-muted fs-5 mb-0">Major: <span class="badge" style="background: rgba(108, 92, 231, 0.1); color: var(--ss-primary); font-size: 0.9rem;">@Model.Major</span></p>
-    </div>
-</div>
-
-<div class="row g-4 mb-5">
-    <!-- Time Credits Wallet Card -->
-    <div class="col-md-4">
-        <div class="wallet-card wallet-card-credits h-100 p-4 text-white text-center d-flex flex-column justify-content-center">
-            <div class="glow-ring mx-auto mb-3">
-                <i class="bi bi-coin wallet-icon"></i>
-            </div>
-            <h2 class="wallet-value mb-1" id="time-credits-display">@Model.TimeCredits</h2>
-            <div class="wallet-label mt-2">Time-Credits</div>
+<div class="container py-5">
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-4 fw-bold gradient-text mb-2">Welcome back, @Model.FullName!</h1>
+            <p class="lead text-muted">Here's an overview of your teaching and learning journey.</p>
         </div>
-    </div>
-
-    <!-- Focus Points Wallet Card -->
-    <div class="col-md-4">
-        <div class="wallet-card wallet-card-points h-100 p-4 text-white text-center d-flex flex-column justify-content-center">
-            <div class="glow-ring mx-auto mb-3" style="border-color: rgba(255,255,255,0.4);">
-                <i class="bi bi-lightning-fill wallet-icon text-warning"></i>
-            </div>
-            <h2 class="wallet-value mb-1" id="focus-points-display">@Model.FocusPoints</h2>
-            <div class="wallet-label mt-2">Focus Points</div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Card -->
-    <div class="col-md-4">
-        <div class="wallet-card wallet-card-action h-100 p-4 text-white text-center d-flex flex-column justify-content-center">
-            <div class="mb-4">
-                <i class="bi bi-rocket-takeoff" style="font-size: 3.5rem; opacity: 0.9; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); color: var(--ss-gold);"></i>
-            </div>
-            <a asp-controller="Marketplace" asp-action="Create" class="btn btn-warning text-dark fw-bold mb-3 shadow-sm hover-lift" style="font-size: 1.1rem; padding: 0.8rem;">
-                <i class="bi bi-plus-circle me-2"></i>New Swap Booking
-            </a>
-            <a asp-controller="Marketplace" asp-action="Index" class="btn btn-outline-light hover-lift">
-                <i class="bi bi-shop me-2"></i>Explore Marketplace
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a asp-controller="Session" asp-action="Create" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm hover-lift">
+                <i class="bi bi-plus-lg me-2"></i>Host Session
             </a>
         </div>
     </div>
-</div>
 
-<!-- Upcoming Bookings (Activity Feed Style) -->
-<div class="row">
-    <div class="col-12">
-        <div class="card card-no-hover">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
-                <h4 class="section-title mb-0">
-                    <i class="bi bi-activity bg-light p-2 rounded-3"></i> Your Active Swaps
-                </h4>
+    <!-- Stats Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(244,114,182,0.1)); border-left: 4px solid var(--ss-primary) !important;">
+                <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                    <i class="bi bi-coin" style="font-size: 4rem;"></i>
+                </div>
+                <h6 class="text-uppercase fw-bold text-muted mb-2">Time Credits</h6>
+                <h2 class="display-5 fw-bold mb-0 text-dark">@Model.TimeCredits</h2>
+                <p class="small text-muted mt-2 mb-0">Use credits to join sessions</p>
             </div>
-            <div class="card-body p-4 pt-2">
-                @if (Model.UpcomingBookings.Any())
-                {
-                    <div class="list-group list-group-flush border-top">
-                        @foreach (var booking in Model.UpcomingBookings)
-                        {
-                            <div class="feed-item d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                        <i class="bi @(booking.Role == "Requester" ? "bi-arrow-up-right text-coral" : "bi-arrow-down-left text-teal") fs-4" 
-                                           style="color: @(booking.Role == "Requester" ? "var(--ss-coral)" : "var(--ss-teal)");"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-1 fw-bold">@booking.SkillName</h5>
-                                        <p class="mb-0 text-muted fs-6">
-                                            With <strong>@booking.OtherUserName</strong> &bull; 
-                                            <span class="badge @(booking.Role == "Requester" ? "bg-info text-dark" : "bg-primary")" style="font-size: 0.7rem;">
-                                                @booking.Role
-                                            </span>
-                                        </p>
-                                    </div>
-                                </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 text-primary opacity-25">
+                    <i class="bi bi-person-video3" style="font-size: 4rem;"></i>
+                </div>
+                <h6 class="text-uppercase fw-bold text-muted mb-2">Sessions Hosted</h6>
+                <h2 class="display-5 fw-bold mb-0 text-dark">@Model.SessionsHosted</h2>
+                <a asp-controller="Session" asp-action="MyHosted" class="stretched-link text-decoration-none mt-2 d-inline-block small fw-bold">View Hosted <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 text-success opacity-25">
+                    <i class="bi bi-journal-bookmark" style="font-size: 4rem;"></i>
+                </div>
+                <h6 class="text-uppercase fw-bold text-muted mb-2">Sessions Joined</h6>
+                <h2 class="display-5 fw-bold mb-0 text-dark">@Model.SessionsJoined</h2>
+                <a asp-controller="Session" asp-action="MyJoined" class="stretched-link text-decoration-none mt-2 d-inline-block small fw-bold text-success">View Joined <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
 
-                                <div class="text-center px-3 border-start border-end d-none d-md-block">
-                                    <h5 class="mb-0 fw-bold">@booking.CreditCost <i class="bi bi-coin text-warning fs-6"></i></h5>
-                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">Cost</small>
-                                </div>
+    <div class="row g-5">
+        <!-- Upcoming Sessions -->
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold m-0"><i class="bi bi-calendar-check text-primary me-2"></i>Upcoming Schedule</h3>
+                <a asp-controller="Session" asp-action="Browse" class="btn btn-sm btn-outline-primary rounded-pill fw-bold">Browse All</a>
+            </div>
 
-                                <div class="d-flex align-items-center gap-4">
-                                    <div class="text-end">
-                                        @{
-                                            var isCompleted = booking.Status == StudySync.Models.BookingStatus.Completed;
-                                            var isConfirmed = booking.Status == StudySync.Models.BookingStatus.Confirmed;
-                                            var isPending = booking.Status == StudySync.Models.BookingStatus.Pending;
-                                        }
-                                        @if (isCompleted || isConfirmed)
+            @if (!Model.UpcomingSessions.Any())
+            {
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-light">
+                    <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="fw-bold">No upcoming sessions</h5>
+                    <p class="text-muted mb-0">You have no scheduled sessions right now.</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var session in Model.UpcomingSessions)
+                    {
+                        <div class="card border-0 shadow-sm rounded-4 hover-lift">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 text-center text-md-start mb-3 mb-md-0 border-md-end border-light">
+                                        <div class="fw-bold text-primary fs-5">@session.ScheduledAt.ToString("MMM dd")</div>
+                                        <div class="text-muted">@session.ScheduledAt.ToString("h:mm tt")</div>
+                                        <div class="small text-muted mt-1"><i class="bi bi-clock me-1"></i>@session.DurationMinutes min</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3 mb-md-0 px-md-4">
+                                        @if (session.IsHost)
                                         {
-                                            <div class="mb-1">
-                                                <span class="status-dot status-dot-active"></span>
-                                                <span class="fw-bold @(isCompleted ? "text-primary" : "text-success")">@booking.Status</span>
-                                            </div>
+                                            <span class="badge bg-primary rounded-pill mb-2">Hosting</span>
                                         }
                                         else
                                         {
-                                            <div class="mb-1">
-                                                <span class="status-dot status-dot-pending"></span>
-                                                <span class="fw-bold text-warning">Pending</span>
-                                            </div>
+                                            <span class="badge bg-success rounded-pill mb-2">Enrolled</span>
                                         }
-
-                                        <div style="font-size: 0.75rem;">
-                                            <span class="@(booking.RequesterConfirmed ? "text-success fw-bold" : "text-muted") me-2">
-                                                <i class="bi @(booking.RequesterConfirmed ? "bi-check-circle-fill" : "bi-circle")"></i> Req
-                                            </span>
-                                            <span class="@(booking.ProviderConfirmed ? "text-success fw-bold" : "text-muted")">
-                                                <i class="bi @(booking.ProviderConfirmed ? "bi-check-circle-fill" : "bi-circle")"></i> Pro
-                                            </span>
-                                        </div>
+                                        <h5 class="fw-bold mb-1">@session.Title</h5>
+                                        <p class="text-muted small mb-0"><i class="bi bi-tag-fill me-1"></i>@session.Topic</p>
                                     </div>
-
-                                    <div>
-                                        @if (isPending)
-                                        {
-                                            var alreadyConfirmed = (booking.Role == "Requester" && booking.RequesterConfirmed)
-                                                                || (booking.Role == "Provider" && booking.ProviderConfirmed);
-                                            @if (!alreadyConfirmed)
-                                            {
-                                                <form asp-controller="Marketplace" asp-action="Confirm" asp-route-id="@booking.Id" method="post" class="m-0">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;" id="confirm-btn-@booking.Id">
-                                                        <i class="bi bi-check2 me-1"></i>Confirm
-                                                    </button>
-                                                </form>
-                                            }
-                                            else
-                                            {
-                                                <span class="btn btn-light text-success fw-bold disabled" style="opacity: 1;">
-                                                    <i class="bi bi-check2-all me-1"></i>Waiting...
-                                                </span>
-                                            }
-                                        }
-                                        else if (isConfirmed)
-                                        {
-                                            <span class="btn btn-outline-success disabled" style="opacity: 1;">
-                                                <i class="bi bi-calendar-check me-1"></i>Ready
-                                            </span>
-                                        }
+                                    <div class="col-md-3 text-center text-md-end">
+                                        <a asp-controller="Session" asp-action="Details" asp-route-id="@session.Id" class="btn btn-outline-primary rounded-pill w-100">Details</a>
                                     </div>
                                 </div>
                             </div>
-                        }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="col-lg-5">
+            <h3 class="fw-bold mb-4"><i class="bi bi-clock-history text-primary me-2"></i>Recent Activity</h3>
+            <div class="card border-0 shadow-sm rounded-4 p-0 overflow-hidden">
+                @if (!Model.RecentTransactions.Any())
+                {
+                    <div class="p-5 text-center">
+                        <p class="text-muted m-0">No recent transactions.</p>
                     </div>
                 }
                 else
                 {
-                    <div class="empty-state p-5 bg-white rounded-4 shadow-sm border border-light mt-3">
-                        <div class="empty-state-icon">
-                            <i class="bi bi-rocket text-primary" style="font-size: 5rem; opacity: 0.6;"></i>
-                        </div>
-                        <h4 class="fw-bold mt-3">Your Dashboard is Empty!</h4>
-                        <p class="text-muted mb-4 lead">You don't have any upcoming swaps down here. Let's start learning and sharing your knowledge.</p>
-                        <a asp-controller="Marketplace" asp-action="Create" class="btn btn-primary btn-lg shadow hover-lift rounded-pill px-5">
-                            <i class="bi bi-search me-2"></i>Find a Partner
-                        </a>
+                    <div class="list-group list-group-flush">
+                        @foreach (var tx in Model.RecentTransactions)
+                        {
+                            <div class="list-group-item p-4 border-0 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold mb-1">
+                                            @if (tx.Type == StudySync.Models.TransactionType.SessionJoin)
+                                            {
+                                                <i class="bi bi-arrow-up-right-circle text-danger me-2"></i><span>Paid to Join Session</span>
+                                            }
+                                            else if (tx.Type == StudySync.Models.TransactionType.SessionEarned)
+                                            {
+                                                <i class="bi bi-arrow-down-left-circle text-success me-2"></i><span>Earned from Attendee</span>
+                                            }
+                                            else if (tx.Type == StudySync.Models.TransactionType.SessionRefund)
+                                            {
+                                                <i class="bi bi-arrow-counterclockwise text-warning me-2"></i><span>Session Refund</span>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-info-circle text-primary me-2"></i><span>Admin Adjustment</span>
+                                            }
+                                        </div>
+                                        <small class="text-muted d-block">@tx.Note</small>
+                                        <small class="text-muted d-block" style="font-size: 0.7rem;">@tx.CreatedAt.ToString("MMM dd, h:mm tt")</small>
+                                    </div>
+                                    <div class="fw-bold fs-5 @(tx.AmountChange >= 0 ? "text-success" : "text-danger")">
+                                        @(tx.AmountChange > 0 ? "+" : "")@tx.AmountChange
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
             </div>

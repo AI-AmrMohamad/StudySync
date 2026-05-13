@@ -13,11 +13,9 @@ namespace StudySync.Data
 
         public DbSet<Skill> Skills { get; set; }
         public DbSet<UserSkill> UserSkills { get; set; }
-        public DbSet<SwapBooking> SwapBookings { get; set; }
+        public DbSet<Session> Sessions { get; set; }
+        public DbSet<SessionEnrollment> SessionEnrollments { get; set; }
         public DbSet<CreditTransaction> CreditTransactions { get; set; }
-        public DbSet<FocusRoom> FocusRooms { get; set; }
-        public DbSet<FocusSession> FocusSessions { get; set; }
-        public DbSet<HelpBounty> HelpBounties { get; set; }
         public DbSet<CommunityChannel> CommunityChannels { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
 
@@ -42,55 +40,43 @@ namespace StudySync.Data
                 .HasForeignKey(us => us.SkillId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // SwapBooking: Restrict delete to prevent circular cascade paths
-            builder.Entity<HelpBounty>()
-                .HasOne(hb => hb.Requester)
-                .WithMany()
-                .HasForeignKey(hb => hb.RequesterId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+            // Chat message relationships
             builder.Entity<ChatMessage>()
                 .HasOne(m => m.Channel)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.CommunityChannelId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             builder.Entity<ChatMessage>()
                 .HasOne(m => m.User)
                 .WithMany()
                 .HasForeignKey(m => m.ApplicationUserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<SwapBooking>()
-                .HasOne(b => b.Requester)
-                .WithMany(u => u.RequestedBookings)
-                .HasForeignKey(b => b.RequesterId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<SwapBooking>()
-                .HasOne(b => b.Provider)
-                .WithMany(u => u.ProvidedBookings)
-                .HasForeignKey(b => b.ProviderId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<SwapBooking>()
-                .HasOne(b => b.Skill)
-                .WithMany(s => s.SwapBookings)
-                .HasForeignKey(b => b.SkillId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // FocusSession relationships
-            builder.Entity<FocusSession>()
-                .HasOne(fs => fs.User)
-                .WithMany(u => u.FocusSessions)
-                .HasForeignKey(fs => fs.UserId)
+            // Session: host relationship
+            builder.Entity<Session>()
+                .HasOne(s => s.Host)
+                .WithMany(u => u.HostedSessions)
+                .HasForeignKey(s => s.HostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<FocusSession>()
-                .HasOne(fs => fs.Room)
-                .WithMany(r => r.FocusSessions)
-                .HasForeignKey(fs => fs.RoomId)
+            // SessionEnrollment: attendee relationship
+            builder.Entity<SessionEnrollment>()
+                .HasOne(e => e.Session)
+                .WithMany(s => s.Enrollments)
+                .HasForeignKey(e => e.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SessionEnrollment>()
+                .HasOne(e => e.Attendee)
+                .WithMany(u => u.SessionEnrollments)
+                .HasForeignKey(e => e.AttendeeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Prevent duplicate enrollments
+            builder.Entity<SessionEnrollment>()
+                .HasIndex(e => new { e.SessionId, e.AttendeeId })
+                .IsUnique();
 
             // CreditTransaction relationships
             builder.Entity<CreditTransaction>()
@@ -99,7 +85,7 @@ namespace StudySync.Data
                 .HasForeignKey(ct => ct.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Seed skills for the marketplace
+            // Seed skills
             builder.Entity<Skill>().HasData(
                 new Skill { Id = 1, Name = "Python Programming", Category = "Programming" },
                 new Skill { Id = 2, Name = "Calculus", Category = "Mathematics" },
