@@ -80,8 +80,7 @@ namespace StudySync.Areas.Identity.Pages.Account
                     FullName = Input.FullName,
                     UniversityName = Input.UniversityName,
                     Major = Input.Major,
-                    TimeCredits = 5,
-                    FocusPoints = 0
+                    TimeCredits = 100
                 };
 
                 var result = await _userManager.CreateAsync(user, Input.Password);

@@ -33,18 +33,29 @@ public class HomeController : Controller
                 vm.CurrentUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
             }
 
-            // Fetch exactly 5 active rooms
-            vm.LiveRooms = await _context.FocusRooms
-                .Where(r => r.IsActive && r.EndTime > DateTime.UtcNow)
-                .OrderByDescending(r => r.CreatedAt)
+            // Fetch exactly 5 upcoming open sessions
+            vm.UpcomingSessions = await _context.Sessions
+                .Include(s => s.Host)
+                .Include(s => s.Enrollments)
+                .Where(s => s.Status == SessionStatus.Open && s.ScheduledAt > DateTime.UtcNow)
+                .OrderBy(s => s.ScheduledAt)
                 .Take(5)
-                .ToListAsync();
-
-            // Fetch 5 open bounties
-            vm.OpenJobs = await _context.HelpBounties
-                .Where(b => b.Status == BountyStatus.Open)
-                .OrderByDescending(b => b.CreatedAt)
-                .Take(5)
+                .Select(s => new UpcomingSessionViewModel
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    Topic = s.Topic,
+                    Category = s.Category,
+                    ScheduledAt = s.ScheduledAt,
+                    DurationMinutes = s.DurationMinutes,
+                    CreditCost = s.CreditCost,
+                    MaxAttendees = s.MaxAttendees,
+                    EnrolledCount = s.Enrollments.Count,
+                    Status = s.Status,
+                    HostName = s.Host.FullName,
+                    HostPhotoPath = s.Host.ProfilePhotoPath,
+                    IsHost = s.HostId == userId
+                })
                 .ToListAsync();
 
             // Fetch all channels (Or the ones joined by user. Assuming simple fetch for now since Joined logic isn't fully M2M yet)
@@ -68,22 +79,17 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<IActionResult> Search(string query)
     {
-        if (string.IsNullOrWhiteSpace(query)) return Json(new { rooms = new List<object>(), jobs = new List<object>() });
+        if (string.IsNullOrWhiteSpace(query)) return Json(new { sessions = new List<object>() });
         
         var normalizedQuery = query.ToLower();
         
-        var rooms = await _context.FocusRooms
-            .Where(r => r.Title.ToLower().Contains(normalizedQuery) && r.IsActive)
-            .Select(r => new { id = r.Id, title = r.Title, type = "Room" })
+        var sessions = await _context.Sessions
+            .Where(s => s.Status == SessionStatus.Open && s.ScheduledAt > DateTime.UtcNow &&
+                        (s.Title.ToLower().Contains(normalizedQuery) || s.Topic.ToLower().Contains(normalizedQuery)))
+            .Select(s => new { id = s.Id, title = s.Title, type = "Session" })
             .Take(5)
             .ToListAsync();
             
-        var jobs = await _context.HelpBounties
-            .Where(j => j.Title.ToLower().Contains(normalizedQuery) && j.Status == BountyStatus.Open)
-            .Select(j => new { id = j.Id, title = j.Title, type = "Job" })
-            .Take(5)
-            .ToListAsync();
-            
-        return Json(new { rooms, jobs });
+        return Json(new { sessions });
     }
 }

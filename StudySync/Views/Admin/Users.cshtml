@@ -1,0 +1,169 @@
+@model List<StudySync.Models.ViewModels.AdminUserViewModel>
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<style>
+    .user-row { transition: background 0.15s; }
+    .user-row:hover { background: rgba(108,92,231,0.04); }
+    .banned-row { background: rgba(253,121,121,0.06); }
+    .avatar-sm { width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#F472B6);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.85rem;flex-shrink:0; }
+    .credit-badge { background:rgba(253,203,110,0.15);color:#B7791F;border-radius:2rem;padding:3px 10px;font-size:0.78rem;font-weight:700; }
+    .points-badge { background:rgba(124,58,237,0.1);color:#7C3AED;border-radius:2rem;padding:3px 10px;font-size:0.78rem;font-weight:700; }
+</style>
+
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="display-6 fw-bold mb-1">
+            <i class="bi bi-people-fill text-primary me-2"></i>User Management
+        </h1>
+        <p class="text-muted mb-0">@Model.Count user@(Model.Count != 1 ? "s" : "") registered</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1"></i>Admin Home
+    </a>
+</div>
+
+<!-- Search -->
+<div class="card border-0 shadow-sm mb-4 p-3" style="border-radius:1.2rem;">
+    <form method="get" asp-action="Users">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="search" value="@ViewBag.Search"
+                   class="form-control border-start-0"
+                   placeholder="Search by name, email, or major…"
+                   id="admin-user-search" />
+            <button type="submit" class="btn btn-primary px-4 fw-bold" id="admin-search-btn">Search</button>
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="card border-0 shadow-sm" style="border-radius:1.2rem;overflow:hidden;">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="users-table">
+            <thead style="background:rgba(108,92,231,0.06);">
+                <tr>
+                    <th class="ps-4 py-3">User</th>
+                    <th>Major</th>
+                    <th>Credits</th>
+                    <th>Hosted</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr class="user-row @(user.IsBanned ? "banned-row" : "")" id="row-@user.Id">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar-sm">@(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")</div>
+                                <div>
+                                    <div class="fw-bold">@user.FullName</div>
+                                    <small class="text-muted">@user.Email</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="align-middle"><span class="text-muted small">@user.Major</span></td>
+                        <td class="align-middle">
+                            <span class="credit-badge"><i class="bi bi-coin me-1"></i>@user.TimeCredits</span>
+                        </td>
+                        <td class="align-middle">
+                            <span class="points-badge"><i class="bi bi-person-video3 me-1"></i>@user.SessionsHosted</span>
+                        </td>
+                        <td class="align-middle"><span class="badge bg-light text-dark rounded-pill">@user.SessionsJoined</span></td>
+                        <td class="align-middle">
+                            @if (user.IsBanned)
+                            {
+                                <span class="badge bg-danger rounded-pill px-3 py-2">
+                                    <i class="bi bi-slash-circle me-1"></i>Banned
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success rounded-pill px-3 py-2">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                            }
+                        </td>
+                        <td class="text-end pe-4 align-middle">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <!-- Ban Toggle -->
+                                <form asp-action="BanUser" method="post" class="d-inline" id="ban-form-@user.Id">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <button type="submit"
+                                            class="btn btn-sm @(user.IsBanned ? "btn-outline-success" : "btn-outline-danger") rounded-pill fw-bold"
+                                            id="ban-btn-@user.Id"
+                                            onclick="return confirm('@(user.IsBanned ? $"Unban {user.FullName}?" : $"Ban {user.FullName}? They will lose chat access.")')">
+                                        <i class="bi @(user.IsBanned ? "bi-check-circle" : "bi-slash-circle") me-1"></i>
+                                        @(user.IsBanned ? "Unban" : "Ban")
+                                    </button>
+                                </form>
+
+                                <!-- Credit Adjust (modal trigger) -->
+                                <button class="btn btn-sm btn-outline-warning rounded-pill fw-bold"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#creditModal"
+                                        data-userid="@user.Id"
+                                        data-username="@user.FullName"
+                                        data-credits="@user.TimeCredits"
+                                        id="credits-btn-@user.Id">
+                                    <i class="bi bi-coin me-1"></i>Credits
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Credit Adjust Modal -->
+<div class="modal fade" id="creditModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form asp-action="AdjustCredits" method="post" class="modal-content" style="border-radius:1.2rem;border:0;" id="credit-adjust-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="userId" id="modal-userId" />
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-coin text-warning me-2"></i>Adjust Credits
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <p class="text-muted mb-3">Adjusting credits for: <strong id="modal-userName"></strong> (current: <strong id="modal-credits"></strong>)</p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Amount (use negative to deduct)</label>
+                    <input type="number" name="amount" class="form-control" placeholder="e.g. 10 or -5" required id="credit-amount-input" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Reason / Note</label>
+                    <input type="text" name="note" class="form-control" placeholder="e.g. Bonus for quality session" id="credit-note-input" />
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-warning fw-bold rounded-pill px-4 text-dark" id="credit-apply-btn">
+                    <i class="bi bi-check2 me-1"></i>Apply
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Populate credit modal
+    document.querySelectorAll('[data-bs-target="#creditModal"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('modal-userId').value = btn.dataset.userid;
+            document.getElementById('modal-userName').textContent = btn.dataset.username;
+            document.getElementById('modal-credits').textContent = btn.dataset.credits;
+        });
+    });
+</script>
+}

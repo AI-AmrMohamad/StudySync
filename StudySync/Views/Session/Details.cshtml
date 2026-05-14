@@ -1,0 +1,176 @@
+@model StudySync.Models.ViewModels.SessionDetailsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container py-5">
+    <!-- Back Button -->
+    <a asp-action="Browse" class="btn btn-link text-decoration-none ps-0 mb-4 text-muted hover-lift d-inline-block">
+        <i class="bi bi-arrow-left me-2"></i>Back to Sessions
+    </a>
+
+    <div class="row g-5">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">@Model.Category</span>
+                <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-2 fs-6">@Model.Topic</span>
+                @if (Model.Status == StudySync.Models.SessionStatus.Completed)
+                {
+                    <span class="badge bg-success rounded-pill px-3 py-2 fs-6">Completed</span>
+                }
+                else if (Model.Status == StudySync.Models.SessionStatus.Cancelled)
+                {
+                    <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">Cancelled</span>
+                }
+            </div>
+
+            <h1 class="fw-bold mb-4">@Model.Title</h1>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+                <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>About this Session</h5>
+                <p class="mb-0" style="white-space: pre-line;">@(string.IsNullOrWhiteSpace(Model.Description) ? "No description provided." : Model.Description)</p>
+            </div>
+
+            @if (Model.IsHost)
+            {
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-5 border-start border-4 border-primary">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-people-fill text-primary me-2"></i>Attendees (@Model.EnrolledCount / @Model.MaxAttendees)</h5>
+                    @if (!Model.Attendees.Any())
+                    {
+                        <p class="text-muted mb-0">No one has joined yet.</p>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var attendee in Model.Attendees)
+                            {
+                                <div class="list-group-item px-0 py-3 d-flex align-items-center border-0 border-bottom">
+                                    <div class="avatar me-3" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: var(--ss-teal); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        @if (!string.IsNullOrEmpty(attendee.AttendeePhotoPath))
+                                        {
+                                            <img src="@attendee.AttendeePhotoPath" alt="@attendee.AttendeeName" style="width:100%; height:100%; object-fit:cover;" />
+                                        }
+                                        else
+                                        {
+                                            @attendee.AttendeeName.Substring(0,1).ToUpper()
+                                        }
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">@attendee.AttendeeName</h6>
+                                        <small class="text-muted">Joined: @attendee.EnrolledAt.ToString("MMM dd, h:mm tt")</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Action Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: linear-gradient(135deg, rgba(124,58,237,0.05), rgba(244,114,182,0.05));">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <h5 class="fw-bold m-0">Credit Cost</h5>
+                    <span class="fs-3 fw-bold text-success"><i class="bi bi-coin me-2"></i>@Model.CreditCost</span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-white rounded-circle p-2 shadow-sm me-3 text-primary"><i class="bi bi-calendar-event fs-5"></i></div>
+                        <div>
+                            <small class="text-muted d-block">Date & Time</small>
+                            <span class="fw-bold">@Model.ScheduledAt.ToString("MMM dd, yyyy • h:mm tt")</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-white rounded-circle p-2 shadow-sm me-3 text-primary"><i class="bi bi-clock fs-5"></i></div>
+                        <div>
+                            <small class="text-muted d-block">Duration</small>
+                            <span class="fw-bold">@Model.DurationMinutes minutes</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-circle p-2 shadow-sm me-3 text-primary"><i class="bi bi-person-check fs-5"></i></div>
+                        <div>
+                            <small class="text-muted d-block">Spots Available</small>
+                            <span class="fw-bold">@(Model.MaxAttendees - Model.EnrolledCount) out of @Model.MaxAttendees</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.IsHost)
+                {
+                    <div class="alert alert-primary border-0 rounded-3 text-center mb-0">
+                        <i class="bi bi-person-video3 me-2"></i>You are the host
+                    </div>
+                    @if (Model.Status == StudySync.Models.SessionStatus.Open)
+                    {
+                        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="mt-3">
+                            <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="return confirm('Are you sure you want to cancel this session? All attendees will be refunded.');">
+                                Cancel Session
+                            </button>
+                        </form>
+                    }
+                }
+                else if (Model.IsEnrolled)
+                {
+                    <div class="alert alert-success border-0 rounded-3 text-center mb-0">
+                        <i class="bi bi-check-circle-fill me-2"></i>You're enrolled!
+                    </div>
+                }
+                else if (Model.Status != StudySync.Models.SessionStatus.Open)
+                {
+                    <button class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>Session @Model.Status</button>
+                }
+                else if (Model.EnrolledCount >= Model.MaxAttendees)
+                {
+                    <button class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>Session Full</button>
+                }
+                else if (!User.Identity.IsAuthenticated)
+                {
+                    <a href="/Identity/Account/Login" class="btn btn-primary w-100 rounded-pill fw-bold hover-lift">Log in to Join</a>
+                }
+                else if (Model.CanJoin)
+                {
+                    <form asp-action="Join" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold hover-lift shadow" onclick="return confirm('Join session for @Model.CreditCost credits?');">
+                            Join Session
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <button class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>Not Enough Credits</button>
+                    <div class="text-center mt-2 small text-muted">You need @Model.CreditCost credits to join.</div>
+                }
+            </div>
+
+            <!-- Host Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <h6 class="text-muted text-uppercase fw-bold mb-3" style="letter-spacing:1px; font-size:0.8rem;">Hosted By</h6>
+                <div class="avatar mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, var(--ss-primary), var(--ss-teal)); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; border: 3px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    @if (!string.IsNullOrEmpty(Model.HostPhotoPath))
+                    {
+                        <img src="@Model.HostPhotoPath" alt="@Model.HostName" style="width:100%; height:100%; object-fit:cover;" />
+                    }
+                    else
+                    {
+                        @Model.HostName.Substring(0,1).ToUpper()
+                    }
+                </div>
+                <h5 class="fw-bold mb-1">@Model.HostName</h5>
+                <p class="text-muted small mb-2">@Model.HostMajor</p>
+                @if (!string.IsNullOrEmpty(Model.HostHeadline))
+                {
+                    <p class="mb-3 fst-italic text-secondary small">"@Model.HostHeadline"</p>
+                }
+                <div class="text-warning">
+                    <i class="bi bi-star-fill"></i> <span class="text-dark fw-bold ms-1">@Model.HostRating.ToString("0.0")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

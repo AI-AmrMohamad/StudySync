@@ -1,0 +1,86 @@
+@model List<StudySync.Models.ViewModels.UpcomingSessionViewModel>
+@{
+    ViewData["Title"] = "My Enrolled Sessions";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h1 class="display-5 fw-bold gradient-text m-0">My Enrolled Sessions</h1>
+        <a asp-action="Browse" class="btn btn-outline-primary rounded-pill fw-bold">
+            <i class="bi bi-search me-2"></i>Find More
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+            <div class="display-1 text-muted mb-4"><i class="bi bi-calendar2-x"></i></div>
+            <h3 class="fw-bold">No upcoming sessions</h3>
+            <p class="text-muted mb-4">You haven't joined any sessions yet. Browse the marketplace to find topics of interest.</p>
+            <a asp-action="Browse" class="btn btn-primary btn-lg rounded-pill px-4 fw-bold shadow-sm">Browse Sessions</a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-lg-2 g-4">
+            @foreach (var session in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift position-relative
+                         @(session.Status == StudySync.Models.SessionStatus.Cancelled ? "opacity-75" : "")">
+                        
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-2">@session.Category</span>
+                                @if (session.Status == StudySync.Models.SessionStatus.Completed)
+                                {
+                                    <span class="badge bg-success rounded-pill">Completed</span>
+                                }
+                                else if (session.Status == StudySync.Models.SessionStatus.Cancelled)
+                                {
+                                    <span class="badge bg-danger rounded-pill">Cancelled (Refunded)</span>
+                                }
+                            </div>
+
+                            <h4 class="fw-bold mb-2">@session.Title</h4>
+                            <p class="text-muted small mb-4">@session.Topic</p>
+
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="avatar me-3" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: var(--ss-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                    @if (!string.IsNullOrEmpty(session.HostPhotoPath))
+                                    {
+                                        <img src="@session.HostPhotoPath" alt="@session.HostName" style="width:100%; height:100%; object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        @session.HostName.Substring(0,1).ToUpper()
+                                    }
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Host</small>
+                                    <h6 class="mb-0 fw-bold">@session.HostName</h6>
+                                </div>
+                            </div>
+
+                            <div class="bg-light rounded-3 p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center fw-medium">
+                                        <i class="bi bi-calendar-event text-primary me-2"></i>
+                                        @session.ScheduledAt.ToString("MMM dd, yyyy")
+                                    </div>
+                                    <div class="text-success fw-bold"><i class="bi bi-coin me-1"></i>@session.CreditCost Paid</div>
+                                </div>
+                                <div class="d-flex align-items-center text-muted small">
+                                    <i class="bi bi-clock me-2"></i> @session.ScheduledAt.ToString("h:mm tt") (@session.DurationMinutes mins)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 p-4 pt-0">
+                            <a asp-action="Details" asp-route-id="@session.Id" class="btn btn-outline-primary w-100 rounded-pill">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

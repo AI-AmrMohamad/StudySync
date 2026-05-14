@@ -16,6 +16,6 @@ namespace StudySync.Models
 
         // Navigation properties
         public ICollection<UserSkill> UserSkills { get; set; } = new List<UserSkill>();
-        public ICollection<SwapBooking> SwapBookings { get; set; } = new List<SwapBooking>();
+
     }
 }

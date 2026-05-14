@@ -22,8 +22,6 @@ namespace StudySync.Models
         [Display(Name = "Time Credits")]
         public int TimeCredits { get; set; } = 5;
 
-        public int FocusPoints { get; set; } = 0;
-
         [StringLength(2000)]
         public string Bio { get; set; } = string.Empty;
 
@@ -31,8 +29,6 @@ namespace StudySync.Models
         public string ProfileHeadline { get; set; } = string.Empty;
 
         public double Rating { get; set; } = 5.0;
-
-        public string ActiveRole { get; set; } = "LearningMode"; // "LearningMode" or "TeachingMode"
 
         public bool IsBanned { get; set; } = false;
 
@@ -46,11 +42,14 @@ namespace StudySync.Models
         [StringLength(255)]
         public string LinkedInProfile { get; set; } = string.Empty;
 
+        // Profile Photo
+        [StringLength(500)]
+        public string? ProfilePhotoPath { get; set; }
+
         // Navigation properties
         public ICollection<UserSkill> UserSkills { get; set; } = new List<UserSkill>();
-        public ICollection<SwapBooking> RequestedBookings { get; set; } = new List<SwapBooking>();
-        public ICollection<SwapBooking> ProvidedBookings { get; set; } = new List<SwapBooking>();
-        public ICollection<FocusSession> FocusSessions { get; set; } = new List<FocusSession>();
+        public ICollection<Session> HostedSessions { get; set; } = new List<Session>();
+        public ICollection<SessionEnrollment> SessionEnrollments { get; set; } = new List<SessionEnrollment>();
         public ICollection<CreditTransaction> CreditTransactions { get; set; } = new List<CreditTransaction>();
         public ICollection<TutorSession> TutorSessions { get; set; } = new List<TutorSession>();
         public ICollection<SessionEnrollment> Enrollments { get; set; } = new List<SessionEnrollment>();

@@ -12,9 +12,6 @@ namespace StudySync.Models.ViewModels
         public List<Skill> LearningSkills { get; set; } = new List<Skill>();
         public List<Skill> AllAvailableSkills { get; set; } = new List<Skill>();
 
-        // Past Work (Bounties)
-        public List<HelpBounty> CompletedBounties { get; set; } = new List<HelpBounty>();
-
         // Editor Form Models
         public ProfileSettingsForm SettingsForm { get; set; } = new ProfileSettingsForm();
         public ChangePasswordForm PasswordForm { get; set; } = new ChangePasswordForm();

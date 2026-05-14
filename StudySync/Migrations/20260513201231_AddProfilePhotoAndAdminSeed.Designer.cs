@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudySync.Data;
 
@@ -11,9 +12,11 @@ using StudySync.Data;
 namespace StudySync.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513201231_AddProfilePhotoAndAdminSeed")]
+    partial class AddProfilePhotoAndAdminSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,6 +166,10 @@ namespace StudySync.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("ActiveRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Bio")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -178,6 +185,9 @@ namespace StudySync.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<int>("FocusPoints")
+                        .HasColumnType("int");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -363,7 +373,7 @@ namespace StudySync.Migrations
                     b.ToTable("CreditTransactions");
                 });
 
-            modelBuilder.Entity("StudySync.Models.Session", b =>
+            modelBuilder.Entity("StudySync.Models.FocusRoom", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -371,42 +381,22 @@ namespace StudySync.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("CreditCost")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
-                    b.Property<string>("HostId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("MaxAttendees")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ScheduledAt")
+                    b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Topic")
                         .IsRequired()
@@ -415,12 +405,10 @@ namespace StudySync.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HostId");
-
-                    b.ToTable("Sessions");
+                    b.ToTable("FocusRooms");
                 });
 
-            modelBuilder.Entity("StudySync.Models.SessionEnrollment", b =>
+            modelBuilder.Entity("StudySync.Models.FocusSession", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -428,27 +416,32 @@ namespace StudySync.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AttendeeId")
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MinutesStayed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsEarned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoomId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("AttendeeId");
+                    b.HasIndex("RoomId");
 
-                    b.HasIndex("SessionId", "AttendeeId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
-                    b.ToTable("SessionEnrollments");
+                    b.ToTable("FocusSessions");
                 });
 
-            modelBuilder.Entity("StudySync.Models.SessionEnrollment", b =>
+            modelBuilder.Entity("StudySync.Models.HelpBounty", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -456,27 +449,34 @@ namespace StudySync.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CreditsPaid")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EnrolledAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("StudentId")
+                    b.Property<int>("CreditReward")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("RequesterId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("TutorSessionId")
+                    b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("RequesterId");
 
-                    b.HasIndex("TutorSessionId", "StudentId")
-                        .IsUnique();
-
-                    b.ToTable("SessionEnrollments");
+                    b.ToTable("HelpBounties");
                 });
 
             modelBuilder.Entity("StudySync.Models.Skill", b =>
@@ -552,7 +552,6 @@ namespace StudySync.Migrations
                         });
                 });
 
-<<<<<<< HEAD
             modelBuilder.Entity("StudySync.Models.SwapBooking", b =>
                 {
                     b.Property<int>("Id")
@@ -604,60 +603,6 @@ namespace StudySync.Migrations
                     b.ToTable("SwapBookings");
                 });
 
-            modelBuilder.Entity("StudySync.Models.TutorSession", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CreditCost")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MaxAttendees")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ScheduledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SkillId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("TutorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SkillId");
-
-                    b.HasIndex("TutorId");
-
-                    b.ToTable("TutorSessions");
-                });
-
-=======
->>>>>>> 76461639f11a644f5445e0d487f22318f27277d5
             modelBuilder.Entity("StudySync.Models.UserSkill", b =>
                 {
                     b.Property<int>("Id")
@@ -767,51 +712,34 @@ namespace StudySync.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudySync.Models.Session", b =>
+            modelBuilder.Entity("StudySync.Models.FocusSession", b =>
                 {
-                    b.HasOne("StudySync.Models.ApplicationUser", "Host")
-                        .WithMany("HostedSessions")
-                        .HasForeignKey("HostId")
+                    b.HasOne("StudySync.Models.FocusRoom", "Room")
+                        .WithMany("FocusSessions")
+                        .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Host");
+                    b.HasOne("StudySync.Models.ApplicationUser", "User")
+                        .WithMany("FocusSessions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Room");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudySync.Models.SessionEnrollment", b =>
+            modelBuilder.Entity("StudySync.Models.HelpBounty", b =>
                 {
-                    b.HasOne("StudySync.Models.ApplicationUser", "Attendee")
-                        .WithMany("SessionEnrollments")
-                        .HasForeignKey("AttendeeId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("StudySync.Models.Session", "Session")
-                        .WithMany("Enrollments")
-                        .HasForeignKey("SessionId")
+                    b.HasOne("StudySync.Models.ApplicationUser", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Attendee");
-
-<<<<<<< HEAD
-            modelBuilder.Entity("StudySync.Models.SessionEnrollment", b =>
-                {
-                    b.HasOne("StudySync.Models.ApplicationUser", "Student")
-                        .WithMany("Enrollments")
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StudySync.Models.TutorSession", "TutorSession")
-                        .WithMany("Enrollments")
-                        .HasForeignKey("TutorSessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Student");
-
-                    b.Navigation("TutorSession");
+                    b.Navigation("Requester");
                 });
 
             modelBuilder.Entity("StudySync.Models.SwapBooking", b =>
@@ -839,28 +767,6 @@ namespace StudySync.Migrations
                     b.Navigation("Requester");
 
                     b.Navigation("Skill");
-=======
-                    b.Navigation("Session");
->>>>>>> 76461639f11a644f5445e0d487f22318f27277d5
-                });
-
-            modelBuilder.Entity("StudySync.Models.TutorSession", b =>
-                {
-                    b.HasOne("StudySync.Models.Skill", "Skill")
-                        .WithMany()
-                        .HasForeignKey("SkillId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StudySync.Models.ApplicationUser", "Tutor")
-                        .WithMany("TutorSessions")
-                        .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Skill");
-
-                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("StudySync.Models.UserSkill", b =>
@@ -886,17 +792,11 @@ namespace StudySync.Migrations
                 {
                     b.Navigation("CreditTransactions");
 
-<<<<<<< HEAD
-                    b.Navigation("Enrollments");
-
                     b.Navigation("FocusSessions");
-=======
-                    b.Navigation("HostedSessions");
->>>>>>> 76461639f11a644f5445e0d487f22318f27277d5
 
-                    b.Navigation("SessionEnrollments");
+                    b.Navigation("ProvidedBookings");
 
-                    b.Navigation("TutorSessions");
+                    b.Navigation("RequestedBookings");
 
                     b.Navigation("UserSkills");
                 });
@@ -906,19 +806,16 @@ namespace StudySync.Migrations
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("StudySync.Models.Session", b =>
+            modelBuilder.Entity("StudySync.Models.FocusRoom", b =>
                 {
-                    b.Navigation("Enrollments");
+                    b.Navigation("FocusSessions");
                 });
 
             modelBuilder.Entity("StudySync.Models.Skill", b =>
                 {
-                    b.Navigation("UserSkills");
-                });
+                    b.Navigation("SwapBookings");
 
-            modelBuilder.Entity("StudySync.Models.TutorSession", b =>
-                {
-                    b.Navigation("Enrollments");
+                    b.Navigation("UserSkills");
                 });
 #pragma warning restore 612, 618
         }

@@ -25,7 +25,19 @@
         font-weight: 800;
         box-shadow: 0 10px 25px rgba(108, 92, 231, 0.3);
         border: 4px solid white;
+        overflow: hidden;
+        position: relative;
     }
+    .profile-avatar-lg img { width:100%; height:100%; object-fit:cover; }
+    .avatar-upload-overlay {
+        position: absolute; inset: 0; background: rgba(0,0,0,0.45);
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.2s; cursor: pointer; border-radius:50%;
+        color: white; font-size: 1.6rem;
+    }
+    .profile-avatar-lg:hover .avatar-upload-overlay { opacity: 1; }
+    .upload-progress { display:none; width:100%; height:4px; background:rgba(108,92,231,0.2); border-radius:2px; overflow:hidden; margin-top:8px; }
+    .upload-progress-bar { height:100%; background:linear-gradient(90deg,#7C3AED,#F472B6); width:0%; transition:width 0.4s; }
     .nav-pills-custom .nav-link {
         border-radius: 20px;
         font-weight: 600;
@@ -90,9 +102,25 @@
             <div class="card border-0 profile-header hover-lift mb-4 shadow-sm">
                 <div class="row align-items-center">
                     <div class="col-md-auto text-center mb-3 mb-md-0">
-                        <div class="profile-avatar-lg mx-auto">
-                            @Model.CurrentUser.FullName.Substring(0,1).ToUpper()
+                        <div class="profile-avatar-lg mx-auto" id="profileAvatarBig"
+                             onclick="document.getElementById('photoUploadInput').click()" title="Click to change photo">
+                            @if (!string.IsNullOrEmpty(Model.CurrentUser.ProfilePhotoPath))
+                            {
+                                <img src="@Model.CurrentUser.ProfilePhotoPath" alt="@Model.CurrentUser.FullName" id="profilePhotoImg" />
+                            }
+                            else
+                            {
+                                <span id="profileInitialSpan">@Model.CurrentUser.FullName.Substring(0,1).ToUpper()</span>
+                            }
+                            <div class="avatar-upload-overlay">
+                                <i class="bi bi-camera-fill"></i>
+                            </div>
                         </div>
+                        <div class="upload-progress mt-2" id="uploadProgress">
+                            <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size:0.72rem;">Click avatar to upload</small>
+                        <input type="file" id="photoUploadInput" accept="image/*" style="display:none" onchange="uploadPhoto(this)" />
                     </div>
                     <div class="col-md">
                         <div class="d-flex justify-content-between align-items-start">
@@ -175,38 +203,7 @@
                     </div>
                 </div>
 
-            <!-- Work History -->
-            <h3 class="fw-bold mt-5 mb-4"><i class="bi bi-briefcase-fill me-2 text-success"></i>Work History</h3>
-            <div class="row g-4">
-                @if (!Model.CompletedBounties.Any())
-                {
-                    <div class="col-12">
-                        <div class="p-5 text-center bg-light rounded-4 text-muted">
-                            <i class="bi bi-search display-3 mb-3 d-block opacity-25"></i>
-                            <h4>No completed jobs yet.</h4>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    @foreach(var bounty in Model.CompletedBounties)
-                    {
-                        <div class="col-md-6">
-                            <div class="card masonry-card p-4">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <h5 class="fw-bold text-dark">@bounty.Title</h5>
-                                    <span class="text-success fw-bold">+@bounty.CreditReward Credits</span>
-                                </div>
-                                <p class="text-muted small mb-3">@bounty.Description</p>
-                                <div class="d-flex text-warning small">
-                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                                    <span class="text-muted ms-2">"Great work!"</span>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-            </div>
+
         </div>
 
         <!-- VIEW B: Private Settings Editor -->
@@ -214,6 +211,35 @@
             <div class="row g-4">
                 <!-- General Info Edit -->
                 <div class="col-lg-8">
+
+                    <!-- Photo Upload Card -->
+                    <div class="card masonry-card p-4 mb-4" style="background:linear-gradient(135deg,rgba(124,58,237,0.04),rgba(244,114,182,0.04));">
+                        <h4 class="fw-bold mb-3"><i class="bi bi-camera-fill me-2 text-primary"></i>Profile Photo</h4>
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="profile-avatar-lg flex-shrink-0" id="settingsAvatarPreview" style="width:80px;height:80px;font-size:2rem;"
+                                 onclick="document.getElementById('photoUploadInput').click()" title="Click to change photo">
+                                @if (!string.IsNullOrEmpty(Model.CurrentUser.ProfilePhotoPath))
+                                {
+                                    <img src="@Model.CurrentUser.ProfilePhotoPath" alt="Preview" id="settingsPhotoImg" />
+                                }
+                                else
+                                {
+                                    <span id="settingsInitialSpan">@Model.CurrentUser.FullName.Substring(0,1).ToUpper()</span>
+                                }
+                                <div class="avatar-upload-overlay"><i class="bi bi-camera-fill" style="font-size:1rem;"></i></div>
+                            </div>
+                            <div>
+                                <p class="mb-2 text-muted small">Upload a profile photo to personalize your account. Max 5 MB. Supports JPG, PNG, WebP.</p>
+                                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="document.getElementById('photoUploadInput').click()" id="choose-photo-btn">
+                                    <i class="bi bi-upload me-2"></i>Choose Photo
+                                </button>
+                                <div class="upload-progress mt-3" id="settingsUploadProgress" style="width:200px;">
+                                    <div class="upload-progress-bar" id="settingsProgressBar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card masonry-card p-4 mb-4">
                         <h4 class="fw-bold mb-4">General Information</h4>
                         <form id="profileSettingsForm">
@@ -334,6 +360,61 @@
 
 @section Scripts {
     <script>
+        // ── Photo Upload ─────────────────────────────────────────────
+        function uploadPhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Preview immediately
+            const reader = new FileReader();
+            reader.onload = e => {
+                // Update big avatar
+                const bigAvatar = document.getElementById('profileAvatarBig');
+                if (bigAvatar) {
+                    const initSpan = document.getElementById('profileInitialSpan');
+                    if (initSpan) initSpan.remove();
+                    let img = document.getElementById('profilePhotoImg');
+                    if (!img) { img = document.createElement('img'); img.id='profilePhotoImg'; bigAvatar.insertBefore(img, bigAvatar.firstChild); }
+                    img.src = e.target.result;
+                }
+                // Update settings avatar
+                const settingsAvatar = document.getElementById('settingsAvatarPreview');
+                if (settingsAvatar) {
+                    const initSpan = document.getElementById('settingsInitialSpan');
+                    if (initSpan) initSpan.remove();
+                    let img = document.getElementById('settingsPhotoImg');
+                    if (!img) { img = document.createElement('img'); img.id='settingsPhotoImg'; settingsAvatar.insertBefore(img, settingsAvatar.firstChild); }
+                    img.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+
+            // Upload
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('__RequestVerificationToken', token);
+
+            // Show progress bars
+            const bars = [document.getElementById('uploadProgress'), document.getElementById('settingsUploadProgress')];
+            const progressBars = [document.getElementById('uploadProgressBar'), document.getElementById('settingsProgressBar')];
+            bars.forEach(b => { if(b) b.style.display = 'block'; });
+            progressBars.forEach(pb => { if(pb) pb.style.width = '30%'; });
+
+            fetch('/Profile/UploadPhoto', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                progressBars.forEach(pb => { if(pb) pb.style.width = '100%'; });
+                setTimeout(() => bars.forEach(b => { if(b) b.style.display = 'none'; }), 800);
+                if (data.success) {
+                    showToast('Profile photo updated!');
+                } else {
+                    showToast(data.message || 'Upload failed.', true);
+                }
+            })
+            .catch(() => showToast('Upload error. Try again.', true));
+        }
+
         function showToast(msg, isError = false) {
             const toastEl = document.getElementById('actionToast');
             document.getElementById('toastMessage').innerText = msg;
