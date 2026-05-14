@@ -20,6 +20,8 @@ namespace StudySync.Data
         public DbSet<HelpBounty> HelpBounties { get; set; }
         public DbSet<CommunityChannel> CommunityChannels { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<TutorSession> TutorSessions { get; set; }
+        public DbSet<SessionEnrollment> SessionEnrollments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -98,6 +100,37 @@ namespace StudySync.Data
                 .WithMany(u => u.CreditTransactions)
                 .HasForeignKey(ct => ct.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // TutorSession relationships
+            builder.Entity<TutorSession>()
+                .HasOne(ts => ts.Tutor)
+                .WithMany(u => u.TutorSessions)
+                .HasForeignKey(ts => ts.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TutorSession>()
+                .HasOne(ts => ts.Skill)
+                .WithMany()
+                .HasForeignKey(ts => ts.SkillId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // SessionEnrollment relationships
+            builder.Entity<SessionEnrollment>()
+                .HasOne(se => se.TutorSession)
+                .WithMany(ts => ts.Enrollments)
+                .HasForeignKey(se => se.TutorSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SessionEnrollment>()
+                .HasOne(se => se.Student)
+                .WithMany(u => u.Enrollments)
+                .HasForeignKey(se => se.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Prevent double enrollment
+            builder.Entity<SessionEnrollment>()
+                .HasIndex(se => new { se.TutorSessionId, se.StudentId })
+                .IsUnique();
 
             // Seed skills for the marketplace
             builder.Entity<Skill>().HasData(

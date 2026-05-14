@@ -1,0 +1,277 @@
+@model List<StudySync.Models.ViewModels.TutorSessionViewModel>
+@{
+    ViewData["Title"] = "Live Sessions";
+}
+
+<div class="row mb-5 align-items-center">
+    <div class="col-md-8">
+        <h1 class="display-5 fw-bold mb-1 section-title">
+            <i class="bi bi-broadcast me-2" style="font-size: 2.5rem; color: #F472B6;"></i> Live Sessions
+        </h1>
+        <p class="text-muted fs-5 mb-0">Join live tutoring sessions or create your own to share knowledge</p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a asp-action="Create" class="btn btn-lg shadow-sm hover-lift text-white" style="background: linear-gradient(135deg, #7C3AED, #F472B6); border-radius: 50rem;" id="create-session-btn">
+            <i class="bi bi-plus-circle me-2"></i>Create Session
+        </a>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <!-- Filter tabs -->
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+        <button class="btn btn-sm px-3 py-2 fw-bold session-filter-btn active" data-filter="all" style="border-radius: 50rem;">
+            <i class="bi bi-grid me-1"></i>All
+        </button>
+        <button class="btn btn-sm btn-outline-secondary px-3 py-2 fw-bold session-filter-btn" data-filter="upcoming" style="border-radius: 50rem;">
+            <i class="bi bi-calendar-event me-1"></i>Upcoming
+        </button>
+        <button class="btn btn-sm btn-outline-secondary px-3 py-2 fw-bold session-filter-btn" data-filter="live" style="border-radius: 50rem;">
+            <span class="d-inline-block rounded-circle bg-danger me-1" style="width:8px;height:8px;"></span>Live Now
+        </button>
+        <button class="btn btn-sm btn-outline-secondary px-3 py-2 fw-bold session-filter-btn" data-filter="enrolled" style="border-radius: 50rem;">
+            <i class="bi bi-check-circle me-1"></i>My Enrollments
+        </button>
+        <button class="btn btn-sm btn-outline-secondary px-3 py-2 fw-bold session-filter-btn" data-filter="teaching" style="border-radius: 50rem;">
+            <i class="bi bi-mortarboard me-1"></i>My Sessions
+        </button>
+    </div>
+
+    <div class="row g-4" id="sessions-grid">
+        @foreach (var session in Model)
+        {
+            var isLive = session.Status == StudySync.Models.SessionStatus.Live;
+            var isCompleted = session.Status == StudySync.Models.SessionStatus.Completed;
+            var isFull = session.EnrolledCount >= session.MaxAttendees;
+            var isPast = session.ScheduledAt < DateTime.Now && !isLive;
+
+            <div class="col-md-6 col-lg-4 session-card"
+                 data-status="@session.Status.ToString().ToLower()"
+                 data-enrolled="@session.IsEnrolled.ToString().ToLower()"
+                 data-teaching="@session.IsTutor.ToString().ToLower()">
+                <div class="card h-100 border-0 shadow-sm d-flex flex-column hover-lift" style="border-radius: 1.2rem; overflow: hidden; @(isLive ? "border: 2px solid #EF4444 !important; box-shadow: 0 0 20px rgba(239,68,68,0.15) !important;" : "")">
+                    
+                    <!-- Card Header with gradient -->
+                    <div class="px-4 pt-4 pb-3" style="background: @(isLive ? "linear-gradient(135deg, #DC2626, #F87171)" : isCompleted ? "linear-gradient(135deg, #6B7280, #9CA3AF)" : "linear-gradient(135deg, #7C3AED, #A78BFA)");">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-white bg-opacity-25 text-white px-2 py-1" style="font-size: 0.7rem;">
+                                <i class="bi bi-book me-1"></i>@session.SkillName
+                            </span>
+                            @if (isLive)
+                            {
+                                <span class="badge bg-white text-danger px-2 py-1 d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                                    <span class="d-inline-block rounded-circle bg-danger" style="width:6px;height:6px;animation: pulse 1.5s infinite;"></span>
+                                    LIVE
+                                </span>
+                            }
+                            else if (isCompleted)
+                            {
+                                <span class="badge bg-white bg-opacity-25 text-white px-2 py-1" style="font-size: 0.7rem;">Completed</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-white bg-opacity-25 text-white px-2 py-1" style="font-size: 0.7rem;">Upcoming</span>
+                            }
+                        </div>
+                        <h5 class="text-white fw-bold mb-1" style="line-height: 1.3;">@session.Title</h5>
+                    </div>
+
+                    <div class="card-body p-4 flex-grow-1 d-flex flex-column">
+                        <!-- Tutor info -->
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold" 
+                                 style="width: 36px; height: 36px; font-size: 0.85rem; background: linear-gradient(135deg, #7C3AED, #F472B6);">
+                                @session.TutorName.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="font-size: 0.9rem;">@session.TutorName</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    @(session.IsTutor ? "You" : "Tutor")
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description preview -->
+                        <p class="text-muted mb-3" style="font-size: 0.85rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            @session.Description
+                        </p>
+
+                        <!-- Stats row -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded-3" style="background: rgba(124,58,237,0.06);">
+                                    <i class="bi bi-calendar3 d-block mb-1" style="color: #7C3AED; font-size: 1.1rem;"></i>
+                                    <div class="fw-bold" style="font-size: 0.75rem;">@session.ScheduledAt.ToString("MMM dd")</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">@session.ScheduledAt.ToString("hh:mm tt")</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded-3" style="background: rgba(245,158,11,0.06);">
+                                    <i class="bi bi-coin d-block mb-1 text-warning" style="font-size: 1.1rem;"></i>
+                                    <div class="fw-bold" style="font-size: 0.75rem;">@session.CreditCost</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">Credits</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded-3" style="background: rgba(16,185,129,0.06);">
+                                    <i class="bi bi-people d-block mb-1 text-success" style="font-size: 1.1rem;"></i>
+                                    <div class="fw-bold" style="font-size: 0.75rem;">@session.EnrolledCount/@session.MaxAttendees</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">Seats</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Duration -->
+                        <div class="d-flex align-items-center gap-2 text-muted mb-3" style="font-size: 0.8rem;">
+                            <i class="bi bi-clock"></i>
+                            <span>@session.DurationMinutes minutes</span>
+                        </div>
+
+                        <!-- Spacer to push button to bottom -->
+                        <div class="mt-auto">
+                            @if (session.IsTutor)
+                            {
+                                @if (session.Status == StudySync.Models.SessionStatus.Upcoming)
+                                {
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="Room" asp-route-id="@session.Id" class="btn btn-primary flex-grow-1 fw-bold" style="border-radius: 50rem;" id="enter-room-btn-@session.Id">
+                                            <i class="bi bi-door-open me-1"></i>Enter Room
+                                        </a>
+                                        <form asp-action="Cancel" asp-route-id="@session.Id" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger" style="border-radius: 50rem;" onclick="return confirm('Cancel this session? All enrolled students will be refunded.')">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                                else if (isLive)
+                                {
+                                    <a asp-action="Room" asp-route-id="@session.Id" class="btn btn-danger w-100 fw-bold" style="border-radius: 50rem;" id="rejoin-live-btn-@session.Id">
+                                        <span class="d-inline-block rounded-circle bg-white me-2" style="width:8px;height:8px;animation: pulse 1.5s infinite;"></span>
+                                        Rejoin Live Session
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-outline-secondary w-100 disabled" style="border-radius: 50rem; opacity: 0.7;">
+                                        <i class="bi bi-check-circle me-1"></i>Session Ended
+                                    </span>
+                                }
+                            }
+                            else if (session.IsEnrolled)
+                            {
+                                @if (isLive)
+                                {
+                                    <a asp-action="Room" asp-route-id="@session.Id" class="btn btn-danger w-100 fw-bold" style="border-radius: 50rem;" id="join-live-btn-@session.Id">
+                                        <span class="d-inline-block rounded-circle bg-white me-2" style="width:8px;height:8px;animation: pulse 1.5s infinite;"></span>
+                                        Join Live Session
+                                    </a>
+                                }
+                                else if (session.Status == StudySync.Models.SessionStatus.Upcoming)
+                                {
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <span class="btn btn-outline-success flex-grow-1 disabled fw-bold" style="border-radius: 50rem; opacity: 1;">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Enrolled
+                                        </span>
+                                        <a asp-action="Room" asp-route-id="@session.Id" class="btn btn-primary" style="border-radius: 50rem;" id="preview-room-btn-@session.Id">
+                                            <i class="bi bi-door-open"></i>
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-outline-secondary w-100 disabled" style="border-radius: 50rem; opacity: 0.7;">
+                                        <i class="bi bi-check-circle me-1"></i>Attended
+                                    </span>
+                                }
+                            }
+                            else
+                            {
+                                @if (!isCompleted && !isPast && !isFull && session.Status == StudySync.Models.SessionStatus.Upcoming)
+                                {
+                                    <form asp-action="Enroll" asp-route-id="@session.Id" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn w-100 fw-bold text-white" style="background: linear-gradient(135deg, #7C3AED, #F472B6); border-radius: 50rem;" id="enroll-btn-@session.Id">
+                                            <i class="bi bi-lightning-charge me-1"></i>Enroll — @session.CreditCost Credit@(session.CreditCost > 1 ? "s" : "")
+                                        </button>
+                                    </form>
+                                }
+                                else if (isFull)
+                                {
+                                    <span class="btn btn-outline-secondary w-100 disabled fw-bold" style="border-radius: 50rem; opacity: 0.7;">
+                                        <i class="bi bi-people-fill me-1"></i>Full
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-outline-secondary w-100 disabled" style="border-radius: 50rem; opacity: 0.7;">
+                                        <i class="bi bi-clock-history me-1"></i>Closed
+                                    </span>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state p-5 bg-white rounded-4 shadow-sm border border-light mt-4">
+        <div class="empty-state-icon">
+            <i class="bi bi-broadcast text-primary" style="font-size: 6rem; opacity: 0.6;"></i>
+        </div>
+        <h4 class="fw-bold mt-3">No sessions yet!</h4>
+        <p class="text-muted mb-4 lead">Be the first to create a live tutoring session and start sharing your knowledge with others.</p>
+        <a asp-action="Create" class="btn btn-lg shadow hover-lift rounded-pill px-5 text-white" style="background: linear-gradient(135deg, #7C3AED, #F472B6);">
+            <i class="bi bi-plus-circle me-2"></i>Create a Session
+        </a>
+    </div>
+}
+
+@section Scripts {
+    <style>
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .session-filter-btn.active {
+            background: linear-gradient(135deg, #7C3AED, #F472B6) !important;
+            color: white !important;
+            border-color: transparent !important;
+        }
+        .session-card { transition: all 0.3s ease; }
+        .session-card.hidden { display: none !important; }
+    </style>
+
+    <script>
+        document.querySelectorAll('.session-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.session-filter-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.classList.add('btn-outline-secondary');
+                });
+                btn.classList.add('active');
+                btn.classList.remove('btn-outline-secondary');
+
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.session-card').forEach(card => {
+                    if (filter === 'all') {
+                        card.classList.remove('hidden');
+                    } else if (filter === 'upcoming') {
+                        card.classList.toggle('hidden', card.dataset.status !== 'upcoming');
+                    } else if (filter === 'live') {
+                        card.classList.toggle('hidden', card.dataset.status !== 'live');
+                    } else if (filter === 'enrolled') {
+                        card.classList.toggle('hidden', card.dataset.enrolled !== 'true');
+                    } else if (filter === 'teaching') {
+                        card.classList.toggle('hidden', card.dataset.teaching !== 'true');
+                    }
+                });
+            });
+        });
+    </script>
+}

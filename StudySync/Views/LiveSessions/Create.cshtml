@@ -1,0 +1,124 @@
+@model StudySync.Models.ViewModels.CreateSessionViewModel
+@{
+    ViewData["Title"] = "Create Live Session";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm" style="border-radius: 1.5rem; overflow: hidden; max-width: 600px; margin: 0 auto;">
+            <div class="card-header border-0 py-4 px-4" style="background: linear-gradient(135deg, #7C3AED, #F472B6); border-radius: 1.5rem 1.5rem 0 0;">
+                <h3 class="mb-1 fw-bold text-white">
+                    <i class="bi bi-broadcast-pin"></i> Create Live Session
+                </h3>
+                <p class="mb-0 mt-1" style="color: rgba(255,255,255,0.85); font-size: 0.95rem;">Schedule a tutoring session for students to join</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger mb-4 rounded-3 text-start small"></div>
+
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label asp-for="Title" class="form-label fw-bold mb-2" style="color: #2D3436;">
+                            Session Title
+                        </label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-type-h1"></i></span>
+                            <input asp-for="Title" class="form-control border-start-0 ps-0"
+                                   placeholder="e.g. Mastering Python Loops" id="session-title-input" style="font-size: 1rem;" />
+                        </div>
+                        <span asp-validation-for="Title" class="text-danger small mt-1"></span>
+                    </div>
+
+                    <!-- Subject -->
+                    <div class="mb-4">
+                        <label asp-for="SkillId" class="form-label fw-bold mb-2" style="color: #2D3436;">
+                            Subject / Topic
+                        </label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-book"></i></span>
+                            <select asp-for="SkillId" class="form-select border-start-0 ps-0" id="skill-select" style="font-size: 1rem;">
+                                <option value="">-- Choose a subject --</option>
+                                @foreach (var skill in Model.AvailableSkills)
+                                {
+                                    <option value="@skill.Id">@skill.Name (@skill.Category)</option>
+                                }
+                            </select>
+                        </div>
+                        <span asp-validation-for="SkillId" class="text-danger small mt-1"></span>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label asp-for="Description" class="form-label fw-bold mb-2" style="color: #2D3436;">
+                            What will you cover?
+                        </label>
+                        <textarea asp-for="Description" class="form-control shadow-sm" rows="4"
+                                  placeholder="Describe what you'll teach in this session..." id="session-description-input"
+                                  style="font-size: 1rem; border-radius: 0.75rem;"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small mt-1"></span>
+                    </div>
+
+                    <!-- Date & Time -->
+                    <div class="mb-4">
+                        <label asp-for="ScheduledAt" class="form-label fw-bold mb-2" style="color: #2D3436;">
+                            <i class="bi bi-calendar-event me-1" style="color: #7C3AED;"></i> Session Date & Time
+                        </label>
+                        <input asp-for="ScheduledAt" type="datetime-local" class="form-control form-control-lg shadow-sm"
+                               id="session-datetime-input" style="font-size: 1rem; border-radius: 0.75rem;" />
+                        <span asp-validation-for="ScheduledAt" class="text-danger small mt-1"></span>
+                        <div class="form-text mt-1"><i class="bi bi-info-circle me-1"></i>Must be at least 30 minutes from now.</div>
+                    </div>
+
+                    <!-- Duration & Cost in a row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label asp-for="DurationMinutes" class="form-label fw-bold mb-2" style="color: #2D3436;">
+                                <i class="bi bi-clock me-1"></i> Duration
+                            </label>
+                            <select asp-for="DurationMinutes" class="form-select form-select-lg shadow-sm" id="duration-select" style="font-size: 1rem; border-radius: 0.75rem;">
+                                <option value="30">30 min</option>
+                                <option value="45">45 min</option>
+                                <option value="60" selected>60 min</option>
+                                <option value="90">90 min</option>
+                                <option value="120">2 hours</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="CreditCost" class="form-label fw-bold mb-2" style="color: #2D3436;">
+                                <i class="bi bi-coin text-warning me-1"></i> Credit Cost
+                            </label>
+                            <input asp-for="CreditCost" class="form-control form-control-lg shadow-sm" type="number"
+                                   min="1" max="10" id="credit-cost-input" style="font-size: 1rem; border-radius: 0.75rem;" />
+                            <span asp-validation-for="CreditCost" class="text-danger small mt-1"></span>
+                        </div>
+                    </div>
+
+                    <!-- Max Attendees -->
+                    <div class="mb-5">
+                        <label asp-for="MaxAttendees" class="form-label fw-bold mb-2" style="color: #2D3436;">
+                            <i class="bi bi-people me-1"></i> Max Attendees
+                        </label>
+                        <input asp-for="MaxAttendees" class="form-control form-control-lg shadow-sm" type="number"
+                               min="1" max="50" id="max-attendees-input" style="font-size: 1rem; border-radius: 0.75rem;" />
+                        <span asp-validation-for="MaxAttendees" class="text-danger small mt-1"></span>
+                        <div class="form-text mt-1">How many students can join this session.</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-lg fw-bold shadow-sm hover-lift text-white"
+                                style="background: linear-gradient(135deg, #7C3AED, #F472B6); border-radius: 50rem;" id="submit-session-btn">
+                            <i class="bi bi-broadcast me-2"></i>Create Session
+                        </button>
+                        <a asp-action="Index" class="btn btn-light fw-bold hover-lift text-muted">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer bg-white border-0 py-3 text-center text-muted" style="font-size: 0.85rem;">
+                <i class="bi bi-shield-check me-1 text-success"></i> Credits are held safely until session completes
+            </div>
+        </div>
+    </div>
+</div>

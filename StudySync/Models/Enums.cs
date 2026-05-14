@@ -16,11 +16,22 @@ namespace StudySync.Models
         Cancelled
     }
 
+    public enum SessionStatus
+    {
+        Upcoming,
+        Live,
+        Completed,
+        Cancelled
+    }
+
     public enum TransactionType
     {
         SwapDebit,
         SwapCredit,
         FocusReward,
-        AdminAdjustment
+        AdminAdjustment,
+        SessionDebit,
+        SessionCredit,
+        SessionRefund
     }
 }

@@ -52,5 +52,7 @@ namespace StudySync.Models
         public ICollection<SwapBooking> ProvidedBookings { get; set; } = new List<SwapBooking>();
         public ICollection<FocusSession> FocusSessions { get; set; } = new List<FocusSession>();
         public ICollection<CreditTransaction> CreditTransactions { get; set; } = new List<CreditTransaction>();
+        public ICollection<TutorSession> TutorSessions { get; set; } = new List<TutorSession>();
+        public ICollection<SessionEnrollment> Enrollments { get; set; } = new List<SessionEnrollment>();
     }
 }

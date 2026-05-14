@@ -1,0 +1,4 @@
+./StudySync/bin/
+./StudySync/obj
+.vs/
+*.user

@@ -39,116 +39,146 @@
     <div class="col-md-4">
         <div class="wallet-card wallet-card-action h-100 p-4 text-white text-center d-flex flex-column justify-content-center">
             <div class="mb-4">
-                <i class="bi bi-rocket-takeoff" style="font-size: 3.5rem; opacity: 0.9; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); color: var(--ss-gold);"></i>
+                <i class="bi bi-broadcast" style="font-size: 3.5rem; opacity: 0.9; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); color: var(--ss-gold);"></i>
             </div>
-            <a asp-controller="Marketplace" asp-action="Create" class="btn btn-warning text-dark fw-bold mb-3 shadow-sm hover-lift" style="font-size: 1.1rem; padding: 0.8rem;">
-                <i class="bi bi-plus-circle me-2"></i>New Swap Booking
+            <a asp-controller="LiveSessions" asp-action="Create" class="btn btn-warning text-dark fw-bold mb-3 shadow-sm hover-lift" style="font-size: 1.1rem; padding: 0.8rem;">
+                <i class="bi bi-plus-circle me-2"></i>Create Session
             </a>
-            <a asp-controller="Marketplace" asp-action="Index" class="btn btn-outline-light hover-lift">
-                <i class="bi bi-shop me-2"></i>Explore Marketplace
+            <a asp-controller="LiveSessions" asp-action="Index" class="btn btn-outline-light hover-lift">
+                <i class="bi bi-broadcast me-2"></i>Browse Sessions
             </a>
         </div>
     </div>
 </div>
 
-<!-- Upcoming Bookings (Activity Feed Style) -->
-<div class="row">
-    <div class="col-12">
-        <div class="card card-no-hover">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
-                <h4 class="section-title mb-0">
-                    <i class="bi bi-activity bg-light p-2 rounded-3"></i> Your Active Swaps
-                </h4>
-            </div>
-            <div class="card-body p-4 pt-2">
-                @if (Model.UpcomingBookings.Any())
-                {
+<!-- My Teaching Sessions -->
+@if (Model.MySessions.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-no-hover">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
+                    <h4 class="section-title mb-0">
+                        <i class="bi bi-mortarboard bg-light p-2 rounded-3"></i> My Teaching Sessions
+                    </h4>
+                </div>
+                <div class="card-body p-4 pt-2">
                     <div class="list-group list-group-flush border-top">
-                        @foreach (var booking in Model.UpcomingBookings)
+                        @foreach (var session in Model.MySessions)
                         {
+                            var isLive = session.Status == StudySync.Models.SessionStatus.Live;
                             <div class="feed-item d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                        <i class="bi @(booking.Role == "Requester" ? "bi-arrow-up-right text-coral" : "bi-arrow-down-left text-teal") fs-4" 
-                                           style="color: @(booking.Role == "Requester" ? "var(--ss-coral)" : "var(--ss-teal)");"></i>
+                                        <i class="bi bi-broadcast fs-4" style="color: @(isLive ? "#DC2626" : "#7C3AED");"></i>
                                     </div>
                                     <div>
-                                        <h5 class="mb-1 fw-bold">@booking.SkillName</h5>
+                                        <h5 class="mb-1 fw-bold">@session.Title</h5>
                                         <p class="mb-0 text-muted fs-6">
-                                            With <strong>@booking.OtherUserName</strong> &bull; 
-                                            <span class="badge @(booking.Role == "Requester" ? "bg-info text-dark" : "bg-primary")" style="font-size: 0.7rem;">
-                                                @booking.Role
-                                            </span>
+                                            <span class="badge" style="background: rgba(124,58,237,0.1); color: #7C3AED; font-size: 0.7rem;">@session.SkillName</span>
+                                            &bull; @session.ScheduledAt.ToString("MMM dd, hh:mm tt")
                                         </p>
                                     </div>
                                 </div>
 
                                 <div class="text-center px-3 border-start border-end d-none d-md-block">
-                                    <h5 class="mb-0 fw-bold">@booking.CreditCost <i class="bi bi-coin text-warning fs-6"></i></h5>
-                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">Cost</small>
+                                    <h5 class="mb-0 fw-bold">@session.EnrolledCount/@session.MaxAttendees</h5>
+                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">Enrolled</small>
                                 </div>
 
-                                <div class="d-flex align-items-center gap-4">
+                                <div class="d-flex align-items-center gap-3">
                                     <div class="text-end">
-                                        @{
-                                            var isCompleted = booking.Status == StudySync.Models.BookingStatus.Completed;
-                                            var isConfirmed = booking.Status == StudySync.Models.BookingStatus.Confirmed;
-                                            var isPending = booking.Status == StudySync.Models.BookingStatus.Pending;
-                                        }
-                                        @if (isCompleted || isConfirmed)
+                                        @if (isLive)
                                         {
-                                            <div class="mb-1">
-                                                <span class="status-dot status-dot-active"></span>
-                                                <span class="fw-bold @(isCompleted ? "text-primary" : "text-success")">@booking.Status</span>
-                                            </div>
+                                            <span class="badge bg-danger px-2 py-1 d-flex align-items-center gap-1">
+                                                <span class="d-inline-block rounded-circle bg-white" style="width:6px;height:6px;animation: pulse 1.5s infinite;"></span>
+                                                LIVE
+                                            </span>
+                                        }
+                                        else if (session.Status == StudySync.Models.SessionStatus.Completed)
+                                        {
+                                            <span class="badge bg-secondary px-2 py-1">Completed</span>
                                         }
                                         else
                                         {
-                                            <div class="mb-1">
-                                                <span class="status-dot status-dot-pending"></span>
-                                                <span class="fw-bold text-warning">Pending</span>
-                                            </div>
+                                            <span class="badge bg-warning text-dark px-2 py-1">Upcoming</span>
                                         }
-
-                                        <div style="font-size: 0.75rem;">
-                                            <span class="@(booking.RequesterConfirmed ? "text-success fw-bold" : "text-muted") me-2">
-                                                <i class="bi @(booking.RequesterConfirmed ? "bi-check-circle-fill" : "bi-circle")"></i> Req
-                                            </span>
-                                            <span class="@(booking.ProviderConfirmed ? "text-success fw-bold" : "text-muted")">
-                                                <i class="bi @(booking.ProviderConfirmed ? "bi-check-circle-fill" : "bi-circle")"></i> Pro
-                                            </span>
-                                        </div>
                                     </div>
+                                    <a asp-controller="LiveSessions" asp-action="Room" asp-route-id="@session.Id"
+                                       class="btn @(isLive ? "btn-danger" : "btn-primary") btn-sm" style="border-radius: 50rem;">
+                                        <i class="bi bi-door-open me-1"></i>@(isLive ? "Rejoin" : "Enter")
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
+<!-- Enrolled Sessions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-no-hover">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
+                <h4 class="section-title mb-0">
+                    <i class="bi bi-calendar-check bg-light p-2 rounded-3"></i> My Enrolled Sessions
+                </h4>
+            </div>
+            <div class="card-body p-4 pt-2">
+                @if (Model.UpcomingSessions.Any())
+                {
+                    <div class="list-group list-group-flush border-top">
+                        @foreach (var session in Model.UpcomingSessions)
+                        {
+                            var isLive = session.Status == StudySync.Models.SessionStatus.Live;
+                            <div class="feed-item d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="bi @(isLive ? "bi-broadcast text-danger" : "bi-calendar-event") fs-4" style="color: @(isLive ? "#DC2626" : "#7C3AED");"></i>
+                                    </div>
                                     <div>
-                                        @if (isPending)
+                                        <h5 class="mb-1 fw-bold">@session.Title</h5>
+                                        <p class="mb-0 text-muted fs-6">
+                                            By <strong>@session.TutorName</strong> &bull;
+                                            <span class="badge" style="background: rgba(124,58,237,0.1); color: #7C3AED; font-size: 0.7rem;">@session.SkillName</span>
+                                            &bull; @session.ScheduledAt.ToString("MMM dd, hh:mm tt")
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="text-center px-3 border-start border-end d-none d-md-block">
+                                    <h5 class="mb-0 fw-bold">@session.CreditCost <i class="bi bi-coin text-warning fs-6"></i></h5>
+                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">Paid</small>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-end">
+                                        @if (isLive)
                                         {
-                                            var alreadyConfirmed = (booking.Role == "Requester" && booking.RequesterConfirmed)
-                                                                || (booking.Role == "Provider" && booking.ProviderConfirmed);
-                                            @if (!alreadyConfirmed)
-                                            {
-                                                <form asp-controller="Marketplace" asp-action="Confirm" asp-route-id="@booking.Id" method="post" class="m-0">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;" id="confirm-btn-@booking.Id">
-                                                        <i class="bi bi-check2 me-1"></i>Confirm
-                                                    </button>
-                                                </form>
-                                            }
-                                            else
-                                            {
-                                                <span class="btn btn-light text-success fw-bold disabled" style="opacity: 1;">
-                                                    <i class="bi bi-check2-all me-1"></i>Waiting...
-                                                </span>
-                                            }
-                                        }
-                                        else if (isConfirmed)
-                                        {
-                                            <span class="btn btn-outline-success disabled" style="opacity: 1;">
-                                                <i class="bi bi-calendar-check me-1"></i>Ready
+                                            <span class="badge bg-danger px-2 py-1 d-flex align-items-center gap-1">
+                                                <span class="d-inline-block rounded-circle bg-white" style="width:6px;height:6px;animation: pulse 1.5s infinite;"></span>
+                                                LIVE
                                             </span>
                                         }
+                                        else if (session.Status == StudySync.Models.SessionStatus.Completed)
+                                        {
+                                            <span class="badge bg-secondary px-2 py-1">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success px-2 py-1">Enrolled</span>
+                                        }
                                     </div>
+                                    @if (session.Status != StudySync.Models.SessionStatus.Completed)
+                                    {
+                                        <a asp-controller="LiveSessions" asp-action="Room" asp-route-id="@session.Id"
+                                           class="btn @(isLive ? "btn-danger" : "btn-primary") btn-sm" style="border-radius: 50rem;">
+                                            <i class="bi bi-door-open me-1"></i>@(isLive ? "Join Now" : "Enter Room")
+                                        </a>
+                                    }
                                 </div>
                             </div>
                         }
@@ -158,12 +188,12 @@
                 {
                     <div class="empty-state p-5 bg-white rounded-4 shadow-sm border border-light mt-3">
                         <div class="empty-state-icon">
-                            <i class="bi bi-rocket text-primary" style="font-size: 5rem; opacity: 0.6;"></i>
+                            <i class="bi bi-broadcast text-primary" style="font-size: 5rem; opacity: 0.6;"></i>
                         </div>
-                        <h4 class="fw-bold mt-3">Your Dashboard is Empty!</h4>
-                        <p class="text-muted mb-4 lead">You don't have any upcoming swaps down here. Let's start learning and sharing your knowledge.</p>
-                        <a asp-controller="Marketplace" asp-action="Create" class="btn btn-primary btn-lg shadow hover-lift rounded-pill px-5">
-                            <i class="bi bi-search me-2"></i>Find a Partner
+                        <h4 class="fw-bold mt-3">No enrolled sessions yet!</h4>
+                        <p class="text-muted mb-4 lead">Browse live sessions and enroll to start learning from tutors.</p>
+                        <a asp-controller="LiveSessions" asp-action="Index" class="btn btn-primary btn-lg shadow hover-lift rounded-pill px-5">
+                            <i class="bi bi-search me-2"></i>Browse Sessions
                         </a>
                     </div>
                 }
@@ -171,3 +201,12 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <style>
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+}

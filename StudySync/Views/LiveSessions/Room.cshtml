@@ -1,0 +1,578 @@
+@model StudySync.Models.ViewModels.SessionRoomViewModel
+@{
+    ViewData["Title"] = Model.Title + " — Live Session";
+}
+
+<style>
+    .session-room-container {
+        display: flex;
+        gap: 1rem;
+        height: calc(100vh - 200px);
+        min-height: 500px;
+    }
+    .screen-share-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .chat-sidebar {
+        width: 340px;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+    .screen-share-video {
+        flex: 1;
+        background: #0f0f1a;
+        border-radius: 1rem;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    .screen-share-video video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .screen-placeholder {
+        text-align: center;
+        color: rgba(255,255,255,0.4);
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .chat-msg {
+        display: flex;
+        gap: 0.6rem;
+        align-items: flex-start;
+        animation: fadeInUp 0.2s ease;
+    }
+    .chat-msg-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7C3AED, #F472B6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+    .chat-msg-body {
+        background: rgba(124,58,237,0.06);
+        border-radius: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        max-width: 100%;
+    }
+    .chat-msg-name {
+        font-weight: 700;
+        font-size: 0.78rem;
+        color: #7C3AED;
+    }
+    .chat-msg-text {
+        font-size: 0.85rem;
+        color: #2D3436;
+        word-break: break-word;
+    }
+    .chat-msg-time {
+        font-size: 0.65rem;
+        color: #999;
+        margin-top: 2px;
+    }
+    .chat-input-area {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid rgba(0,0,0,0.06);
+    }
+    .system-msg {
+        text-align: center;
+        font-size: 0.78rem;
+        color: #999;
+        padding: 0.3rem 0;
+        font-style: italic;
+    }
+    .attendee-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(124,58,237,0.08);
+        border-radius: 50rem;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #5B21B6;
+    }
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #DC2626;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 50rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: white;
+        animation: pulse 1.5s infinite;
+    }
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @@media (max-width: 768px) {
+        .session-room-container { flex-direction: column; height: auto; }
+        .chat-sidebar { width: 100%; height: 400px; }
+        .screen-share-area { min-height: 300px; }
+    }
+</style>
+
+<!-- Session Header -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div class="d-flex align-items-center gap-3">
+        <a asp-action="Index" class="btn btn-light btn-sm" style="border-radius: 50rem;">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+        <div>
+            <h4 class="mb-0 fw-bold">@Model.Title</h4>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge" style="background: rgba(124,58,237,0.1); color: #7C3AED; font-size: 0.75rem;">
+                    <i class="bi bi-book me-1"></i>@Model.SkillName
+                </span>
+                <span class="text-muted" style="font-size: 0.8rem;">
+                    <i class="bi bi-person me-1"></i>@Model.TutorName
+                </span>
+                <span class="text-muted" style="font-size: 0.8rem;">
+                    <i class="bi bi-clock me-1"></i>@Model.DurationMinutes min
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        @if (Model.Status == StudySync.Models.SessionStatus.Live)
+        {
+            <span class="live-indicator">
+                <span class="live-dot"></span> LIVE
+            </span>
+        }
+        else if (Model.Status == StudySync.Models.SessionStatus.Upcoming)
+        {
+            <span class="badge bg-warning text-dark px-3 py-2" style="border-radius: 50rem;">
+                <i class="bi bi-clock me-1"></i>Upcoming — @Model.ScheduledAt.ToString("MMM dd, hh:mm tt")
+            </span>
+        }
+        else
+        {
+            <span class="badge bg-secondary px-3 py-2" style="border-radius: 50rem;">Completed</span>
+        }
+
+        @if (Model.IsTutor)
+        {
+            @if (Model.Status == StudySync.Models.SessionStatus.Upcoming)
+            {
+                <form asp-action="GoLive" asp-route-id="@Model.SessionId" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger fw-bold" style="border-radius: 50rem;" id="go-live-btn">
+                        <i class="bi bi-broadcast me-1"></i>Go Live
+                    </button>
+                </form>
+            }
+            else if (Model.Status == StudySync.Models.SessionStatus.Live)
+            {
+                <form asp-action="EndSession" asp-route-id="@Model.SessionId" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger fw-bold" style="border-radius: 50rem;"
+                            onclick="return confirm('End this session? Credits will be transferred to you.')" id="end-session-btn">
+                        <i class="bi bi-stop-circle me-1"></i>End Session
+                    </button>
+                </form>
+            }
+        }
+    </div>
+</div>
+
+<!-- Main Room Layout -->
+<div class="session-room-container">
+    <!-- Screen Share Area -->
+    <div class="screen-share-area">
+        <div class="screen-share-video" id="screen-share-container">
+            <video id="screen-video" autoplay playsinline style="display: none;"></video>
+            <div class="screen-placeholder" id="screen-placeholder">
+                <i class="bi bi-display" style="font-size: 5rem; opacity: 0.3;"></i>
+                <p class="mt-3 mb-1 fw-bold" style="font-size: 1.1rem;">
+                    @if (Model.IsTutor)
+                    {
+                        @if (Model.Status == StudySync.Models.SessionStatus.Live)
+                        {
+                            <span>Click below to share your screen</span>
+                        }
+                        else
+                        {
+                            <span>Go Live to start sharing your screen</span>
+                        }
+                    }
+                    else
+                    {
+                        <span>Waiting for tutor to share screen...</span>
+                    }
+                </p>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                    @Model.EnrolledCount attendee@(Model.EnrolledCount != 1 ? "s" : "") in this session
+                </p>
+            </div>
+        </div>
+
+        @if (Model.IsTutor && Model.Status == StudySync.Models.SessionStatus.Live)
+        {
+            <div class="mt-2 d-flex gap-2 justify-content-center">
+                <button id="share-screen-btn" class="btn btn-primary fw-bold" style="border-radius: 50rem;">
+                    <i class="bi bi-display me-1"></i>Share Screen
+                </button>
+                <button id="stop-share-btn" class="btn btn-outline-danger fw-bold" style="border-radius: 50rem; display: none;">
+                    <i class="bi bi-stop-circle me-1"></i>Stop Sharing
+                </button>
+            </div>
+        }
+
+        <!-- Attendees strip -->
+        <div class="mt-2 d-flex flex-wrap gap-1">
+            @foreach (var name in Model.AttendeeNames)
+            {
+                <span class="attendee-chip">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle text-white"
+                          style="width:18px;height:18px;font-size:0.6rem;background:linear-gradient(135deg,#7C3AED,#F472B6);">
+                        @name.Substring(0, 1).ToUpper()
+                    </span>
+                    @name
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- Chat Sidebar -->
+    <div class="chat-sidebar card border-0 shadow-sm" style="border-radius: 1rem; overflow: hidden;">
+        <div class="card-header bg-white border-bottom px-3 py-3">
+            <h6 class="mb-0 fw-bold">
+                <i class="bi bi-chat-dots me-2" style="color: #7C3AED;"></i>Session Chat
+            </h6>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="system-msg">
+                <i class="bi bi-info-circle me-1"></i>Welcome to the session chat. Be respectful!
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-group">
+                <input type="text" id="chat-input" class="form-control" placeholder="Type a message..."
+                       style="border-radius: 50rem 0 0 50rem; font-size: 0.9rem;" maxlength="500" />
+                <button id="send-chat-btn" class="btn btn-primary px-3" style="border-radius: 0 50rem 50rem 0;">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const sessionId = '@Model.SessionId';
+        const isTutor = @Model.IsTutor.ToString().ToLower();
+        const isLive = @(Model.Status == StudySync.Models.SessionStatus.Live ? "true" : "false");
+        const tutorId = '@Model.TutorId';
+
+        // ═══════════════════════════════════════
+        // SignalR Connection
+        // ═══════════════════════════════════════
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start().then(() => {
+            console.log("SignalR connected");
+            // Join session chat group
+            connection.invoke("JoinSession", sessionId);
+            // Join video group for screen sharing
+            connection.invoke("JoinSessionVideo", sessionId);
+        }).catch(err => console.error("SignalR error:", err));
+
+        // ═══════════════════════════════════════
+        // Chat
+        // ═══════════════════════════════════════
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-chat-btn');
+
+        function appendChatMessage(name, initial, text, time) {
+            const div = document.createElement('div');
+            div.className = 'chat-msg';
+            div.innerHTML = `
+                <div class="chat-msg-avatar">${initial}</div>
+                <div class="chat-msg-body">
+                    <div class="chat-msg-name">${name}</div>
+                    <div class="chat-msg-text">${escapeHtml(text)}</div>
+                    <div class="chat-msg-time">${time}</div>
+                </div>`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function appendSystemMsg(text) {
+            const div = document.createElement('div');
+            div.className = 'system-msg';
+            div.innerHTML = `<i class="bi bi-info-circle me-1"></i>${text}`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        function sendMessage() {
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+            connection.invoke("SendSessionMessage", sessionId, msg);
+            chatInput.value = '';
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+        connection.on("ReceiveSessionMessage", (name, initial, message, time) => {
+            appendChatMessage(name, initial, message, time);
+        });
+
+        connection.on("SessionUserJoined", (name, initial) => {
+            appendSystemMsg(`${name} joined the session`);
+        });
+
+        connection.on("SessionUserLeft", (name) => {
+            appendSystemMsg(`${name} left the session`);
+        });
+
+        // ═══════════════════════════════════════
+        // WebRTC Screen Sharing
+        // ═══════════════════════════════════════
+        const screenVideo = document.getElementById('screen-video');
+        const screenPlaceholder = document.getElementById('screen-placeholder');
+        let localStream = null;
+        const peerConnections = {};
+
+        const rtcConfig = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+
+        // === TUTOR: Share screen ===
+        if (isTutor) {
+            const shareBtn = document.getElementById('share-screen-btn');
+            const stopBtn = document.getElementById('stop-share-btn');
+
+            if (shareBtn) {
+                shareBtn.addEventListener('click', async () => {
+                    try {
+                        localStream = await navigator.mediaDevices.getDisplayMedia({
+                            video: { cursor: "always" },
+                            audio: false
+                        });
+
+                        screenVideo.srcObject = localStream;
+                        screenVideo.muted = true; // explicitly mute local preview to ensure autoplay works
+                        screenVideo.style.display = 'block';
+                        screenVideo.play().catch(e => console.error("Video play error:", e));
+                        screenPlaceholder.style.display = 'none';
+                        shareBtn.style.display = 'none';
+                        stopBtn.style.display = 'inline-flex';
+
+                        // Notify all attendees that screen sharing started
+                        connection.invoke("SessionScreenShareStarted", sessionId);
+
+                        // Handle when user stops sharing via browser UI
+                        localStream.getVideoTracks()[0].onended = () => {
+                            stopSharing();
+                        };
+                    } catch (err) {
+                        console.error("Screen share error:", err);
+                    }
+                });
+            }
+
+            if (stopBtn) {
+                stopBtn.addEventListener('click', () => {
+                    stopSharing();
+                });
+            }
+
+            function stopSharing() {
+                if (localStream) {
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                }
+                screenVideo.style.display = 'none';
+                screenPlaceholder.style.display = '';
+                const shareBtn = document.getElementById('share-screen-btn');
+                const stopBtn = document.getElementById('stop-share-btn');
+                if (shareBtn) shareBtn.style.display = 'inline-flex';
+                if (stopBtn) stopBtn.style.display = 'none';
+
+                // Close all peer connections
+                Object.keys(peerConnections).forEach(id => {
+                    peerConnections[id].close();
+                    delete peerConnections[id];
+                });
+
+                connection.invoke("SessionScreenShareStopped", sessionId);
+            }
+
+            // When a new viewer joins, send them an offer
+            connection.on("SessionPeerJoined", async (viewerConnectionId) => {
+                if (!localStream) return;
+                const pc = createPeerConnection(viewerConnectionId);
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                connection.invoke("SessionSendOffer", viewerConnectionId, JSON.stringify(offer));
+            });
+
+            // Receive answer from viewer
+            connection.on("SessionReceiveAnswer", async (viewerConnectionId, sdpAnswer) => {
+                const pc = peerConnections[viewerConnectionId];
+                if (pc) {
+                    await pc.setRemoteDescription(JSON.parse(sdpAnswer));
+                    // Flush queued candidates
+                    if (iceCandidateQueue[viewerConnectionId]) {
+                        for (const cand of iceCandidateQueue[viewerConnectionId]) {
+                            try { await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(cand))); } catch(e){}
+                        }
+                        delete iceCandidateQueue[viewerConnectionId];
+                    }
+                }
+            });
+        }
+
+        // === VIEWER: Receive screen share ===
+        if (!isTutor) {
+            connection.on("ScreenShareStarted", (tutorConnectionId) => {
+                appendSystemMsg("Tutor started screen sharing");
+                // Request the tutor to send a WebRTC offer to this viewer
+                connection.invoke("SessionViewerRequestVideo", tutorConnectionId);
+            });
+
+            connection.on("ScreenShareStopped", () => {
+                appendSystemMsg("Tutor stopped screen sharing");
+                screenVideo.style.display = 'none';
+                screenPlaceholder.style.display = '';
+                // Close peer connections
+                Object.keys(peerConnections).forEach(id => {
+                    peerConnections[id].close();
+                    delete peerConnections[id];
+                });
+            });
+
+            // Receive offer from tutor
+            connection.on("SessionReceiveOffer", async (tutorConnectionId, sdpOffer) => {
+                const pc = createPeerConnection(tutorConnectionId);
+                await pc.setRemoteDescription(JSON.parse(sdpOffer));
+                
+                // Flush queued candidates
+                if (iceCandidateQueue[tutorConnectionId]) {
+                    for (const cand of iceCandidateQueue[tutorConnectionId]) {
+                        try { await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(cand))); } catch(e){}
+                    }
+                    delete iceCandidateQueue[tutorConnectionId];
+                }
+
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                connection.invoke("SessionSendAnswer", tutorConnectionId, JSON.stringify(answer));
+            });
+        }
+
+        // === Shared: ICE candidates ===
+        const iceCandidateQueue = {};
+
+        connection.on("SessionReceiveIceCandidate", async (senderId, candidateJson) => {
+            const pc = peerConnections[senderId];
+            if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+                try {
+                    await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(candidateJson)));
+                } catch(e) { console.error("Error adding ICE candidate:", e); }
+            } else {
+                if (!iceCandidateQueue[senderId]) iceCandidateQueue[senderId] = [];
+                iceCandidateQueue[senderId].push(candidateJson);
+            }
+        });
+
+        connection.on("SessionPeerLeft", (peerId) => {
+            if (peerConnections[peerId]) {
+                peerConnections[peerId].close();
+                delete peerConnections[peerId];
+            }
+            if (iceCandidateQueue[peerId]) {
+                delete iceCandidateQueue[peerId];
+            }
+        });
+
+        function createPeerConnection(peerId) {
+            const pc = new RTCPeerConnection(rtcConfig);
+            peerConnections[peerId] = pc;
+
+            pc.onicecandidate = (e) => {
+                if (e.candidate) {
+                    connection.invoke("SessionSendIceCandidate", peerId, JSON.stringify(e.candidate));
+                }
+            };
+
+            pc.ontrack = (e) => {
+                // Viewer receives the screen share stream
+                screenVideo.srcObject = e.streams[0];
+                screenVideo.style.display = 'block';
+                screenVideo.play().catch(err => console.error("Viewer video play error:", err));
+                screenPlaceholder.style.display = 'none';
+            };
+
+            pc.onconnectionstatechange = () => {
+                if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                    pc.close();
+                    delete peerConnections[peerId];
+                }
+            };
+
+            return pc;
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            connection.invoke("LeaveSession", sessionId);
+            connection.invoke("LeaveSessionVideo", sessionId);
+            Object.keys(peerConnections).forEach(id => {
+                peerConnections[id].close();
+            });
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+            }
+        });
+    </script>
+}

@@ -103,6 +103,7 @@ namespace StudySync.Hubs
         {
             await Clients.Client(targetConnectionId).SendAsync("ReceiveIceCandidate", Context.ConnectionId, candidate);
         }
+
         // --- Room Session Chat (ephemeral, no persistence) ---
 
         public async Task JoinRoom(string roomId)
@@ -136,6 +137,102 @@ namespace StudySync.Hubs
 
             await Clients.Group("room_" + roomId)
                 .SendAsync("ReceiveRoomMessage", user.FullName, initial, message, time);
+        }
+
+        // --- Live Session Methods ---
+
+        public async Task JoinSession(string sessionId)
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return;
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return;
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, "session_" + sessionId);
+
+            // Notify others that someone joined the session
+            var initial = user.FullName.Substring(0, 1).ToUpper();
+            await Clients.OthersInGroup("session_" + sessionId)
+                .SendAsync("SessionUserJoined", user.FullName, initial);
+        }
+
+        public async Task LeaveSession(string sessionId)
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    await Clients.OthersInGroup("session_" + sessionId)
+                        .SendAsync("SessionUserLeft", user.FullName);
+                }
+            }
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "session_" + sessionId);
+        }
+
+        public async Task SendSessionMessage(string sessionId, string message)
+        {
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null || string.IsNullOrWhiteSpace(message)) return;
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || user.IsBanned) return;
+
+            var initial = user.FullName.Substring(0, 1).ToUpper();
+            var time = DateTime.Now.ToString("t");
+
+            await Clients.Group("session_" + sessionId)
+                .SendAsync("ReceiveSessionMessage", user.FullName, initial, message, time);
+        }
+
+        // --- Session Screen Share Signaling ---
+
+        public async Task JoinSessionVideo(string sessionId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "session_video_" + sessionId);
+            // Notify others (especially the tutor) that a new viewer joined
+            await Clients.OthersInGroup("session_video_" + sessionId).SendAsync("SessionPeerJoined", Context.ConnectionId);
+        }
+
+        public async Task LeaveSessionVideo(string sessionId)
+        {
+            await Clients.OthersInGroup("session_video_" + sessionId).SendAsync("SessionPeerLeft", Context.ConnectionId);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "session_video_" + sessionId);
+        }
+
+        public async Task SessionSendOffer(string targetConnectionId, string sdpOffer)
+        {
+            await Clients.Client(targetConnectionId).SendAsync("SessionReceiveOffer", Context.ConnectionId, sdpOffer);
+        }
+
+        public async Task SessionSendAnswer(string targetConnectionId, string sdpAnswer)
+        {
+            await Clients.Client(targetConnectionId).SendAsync("SessionReceiveAnswer", Context.ConnectionId, sdpAnswer);
+        }
+
+        public async Task SessionSendIceCandidate(string targetConnectionId, string candidate)
+        {
+            await Clients.Client(targetConnectionId).SendAsync("SessionReceiveIceCandidate", Context.ConnectionId, candidate);
+        }
+
+        // Tutor notifies all attendees that screen sharing has started
+        public async Task SessionScreenShareStarted(string sessionId)
+        {
+            await Clients.OthersInGroup("session_video_" + sessionId).SendAsync("ScreenShareStarted", Context.ConnectionId);
+        }
+
+        // Viewer requests video from the tutor when they join late or when tutor starts sharing
+        public async Task SessionViewerRequestVideo(string tutorConnectionId)
+        {
+            await Clients.Client(tutorConnectionId).SendAsync("SessionPeerJoined", Context.ConnectionId);
+        }
+
+        // Tutor notifies all attendees that screen sharing has stopped
+        public async Task SessionScreenShareStopped(string sessionId)
+        {
+            await Clients.OthersInGroup("session_video_" + sessionId).SendAsync("ScreenShareStopped");
         }
     }
 }

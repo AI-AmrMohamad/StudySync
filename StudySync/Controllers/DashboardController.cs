@@ -25,13 +25,28 @@ namespace StudySync.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            var bookings = await _context.SwapBookings
-                .Include(b => b.Skill)
-                .Include(b => b.Requester)
-                .Include(b => b.Provider)
-                .Where(b => (b.RequesterId == user.Id || b.ProviderId == user.Id)
-                         && b.Status != BookingStatus.Cancelled)
-                .OrderByDescending(b => b.CreatedAt)
+            // Sessions where this user is enrolled as a student
+            var enrolledSessions = await _context.SessionEnrollments
+                .Include(e => e.TutorSession)
+                    .ThenInclude(ts => ts.Skill)
+                .Include(e => e.TutorSession)
+                    .ThenInclude(ts => ts.Tutor)
+                .Include(e => e.TutorSession)
+                    .ThenInclude(ts => ts.Enrollments)
+                .Where(e => e.StudentId == user.Id
+                    && e.TutorSession.Status != SessionStatus.Cancelled)
+                .OrderBy(e => e.TutorSession.ScheduledAt)
+                .Select(e => e.TutorSession)
+                .ToListAsync();
+
+            // Sessions where this user is the tutor
+            var mySessions = await _context.TutorSessions
+                .Include(ts => ts.Skill)
+                .Include(ts => ts.Tutor)
+                .Include(ts => ts.Enrollments)
+                .Where(ts => ts.TutorId == user.Id
+                    && ts.Status != SessionStatus.Cancelled)
+                .OrderBy(ts => ts.ScheduledAt)
                 .ToListAsync();
 
             var viewModel = new DashboardViewModel
@@ -40,17 +55,31 @@ namespace StudySync.Controllers
                 Major = user.Major,
                 TimeCredits = user.TimeCredits,
                 FocusPoints = user.FocusPoints,
-                UpcomingBookings = bookings.Select(b => new SwapBookingViewModel
+                UpcomingSessions = enrolledSessions.Select(ts => new DashboardSessionViewModel
                 {
-                    Id = b.Id,
-                    SkillName = b.Skill.Name,
-                    OtherUserName = b.RequesterId == user.Id ? b.Provider.FullName : b.Requester.FullName,
-                    Role = b.RequesterId == user.Id ? "Requester" : "Provider",
-                    CreditCost = b.CreditCost,
-                    RequesterConfirmed = b.RequesterConfirmed,
-                    ProviderConfirmed = b.ProviderConfirmed,
-                    Status = b.Status,
-                    CreatedAt = b.CreatedAt
+                    Id = ts.Id,
+                    Title = ts.Title,
+                    SkillName = ts.Skill.Name,
+                    TutorName = ts.Tutor.FullName,
+                    ScheduledAt = ts.ScheduledAt,
+                    CreditCost = ts.CreditCost,
+                    Status = ts.Status,
+                    Role = "Student",
+                    EnrolledCount = ts.Enrollments.Count,
+                    MaxAttendees = ts.MaxAttendees
+                }).ToList(),
+                MySessions = mySessions.Select(ts => new DashboardSessionViewModel
+                {
+                    Id = ts.Id,
+                    Title = ts.Title,
+                    SkillName = ts.Skill.Name,
+                    TutorName = ts.Tutor.FullName,
+                    ScheduledAt = ts.ScheduledAt,
+                    CreditCost = ts.CreditCost,
+                    Status = ts.Status,
+                    Role = "Tutor",
+                    EnrolledCount = ts.Enrollments.Count,
+                    MaxAttendees = ts.MaxAttendees
                 }).ToList()
             };
 
